@@ -39,12 +39,10 @@ implementation:
     - -u
     - -c
     - |
-      def _make_parent_dirs_and_return_path(file_path: str, version: int = 1):
+      def _make_parent_dirs_and_return_path(file_path: str):
           import os
-          file_path_with_version = os.path.join(file_path, str(version))
-          os.makedirs(os.path.dirname(file_path_with_version), exist_ok=True)
-          return file_path_with_version
-
+          os.makedirs(os.path.dirname(file_path), exist_ok=True)
+          return file_path
 
       def keras_train_classifier_from_csv(
           training_features_path,
@@ -110,7 +108,7 @@ implementation:
               shuffle=True
           )
 
-          model.export(model_path)
+          model.save(model_path)
 
           metrics_history = {name: [float(value) for value in values] for name, values in history.history.items()}
           final_metrics = {name: values[-1] for name, values in metrics_history.items()}
@@ -149,7 +147,7 @@ implementation:
       _parser.add_argument("--num-epochs", dest="num_epochs", type=int, required=False, default=argparse.SUPPRESS)
       _parser.add_argument("--batch-size", dest="batch_size", type=int, required=False, default=argparse.SUPPRESS)
       _parser.add_argument("--random-seed", dest="random_seed", type=int, required=False, default=argparse.SUPPRESS)
-      _parser.add_argument("--model", dest="model_path", type=lambda p: _make_parent_dirs_and_return_path(p, version=1), required=True, default=argparse.SUPPRESS)
+      _parser.add_argument("--model", dest="model_path", type=_make_parent_dirs_and_return_path, required=True, default=argparse.SUPPRESS)
       _parser.add_argument("----output-paths", dest="_output_paths", type=str, nargs=3)
       _parsed_args = vars(_parser.parse_args())
       _output_files = _parsed_args.pop("_output_paths", [])
