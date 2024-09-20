@@ -110,7 +110,9 @@ implementation:
           print("==========model_path=======")
           print(model_path)
 
-          model.save(model_path)
+          temp = model.export(model_path)
+          print("==========temp=======")
+          print(temp)
 
           metrics_history = {name: [float(value) for value in values] for name, values in history.history.items()}
           final_metrics = {name: values[-1] for name, values in metrics_history.items()}
