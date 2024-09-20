@@ -21,7 +21,8 @@ implementation:
     command:
       - python3
       - -u
-      - -c
+      - -c    
+      - pip install --quiet minio
       - |
           import argparse
           import tarfile
