@@ -5,7 +5,7 @@ inputs:
   - {name: MinIO Endpoint, type: String, description: 'MinIO server endpoint, e.g. "192.168.28.15:9000"'}
   - {name: MinIO Access Key, type: String, description: 'MinIO access key for authentication'}
   - {name: MinIO Secret Key, type: String, description: 'MinIO secret key for authentication'}
-  - {name: Source MinIO Path, type: String, description: 'Source MinIO file path to be uploaded'}
+  - {name: Source MinIO Path, type: Data, description: 'Source MinIO file path to be uploaded'}
   - {name: Destination Bucket, type: String, description: 'Destination MinIO bucket'}
   - {name: Destination Prefix, type: String, description: 'Destination prefix within the bucket'}
 
