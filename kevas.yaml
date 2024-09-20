@@ -107,6 +107,8 @@ implementation:
               epochs=num_epochs,
               shuffle=True
           )
+          print("==========model_path=======")
+          print(model_path)
 
           model.save(model_path)
 
