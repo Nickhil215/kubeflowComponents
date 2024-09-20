@@ -1,6 +1,6 @@
 name: Extract and Upload Model from MinIO
 description: |-
-  Extracts a tar.gz model from a MinIO path, uploads the extracted files to another MinIO location, and returns the S3 path. 
+  Extracts a tar.gz model from a MinIO path, uploads the extracted files to another MinIO location, and returns the S3 path.
   
   Annotations:
     author: Alexey Volkov <alexey.volkov@ark-kun.com>
@@ -21,11 +21,9 @@ implementation:
     command:
       - python3
       - -u
-      - -c    
-      - (PIP_DISABLE_PIP_VERSION_CHECK=1 python3 -m pip install --quiet --no-warn-script-location
-        'minio' || PIP_DISABLE_PIP_VERSION_CHECK=1 python3 -m
-        pip install --quiet --no-warn-script-location 'minio' --user) && "$0" "$@"
+      - -c
       - |
+        pip install --quiet minio
           import argparse
           import tarfile
           import io
