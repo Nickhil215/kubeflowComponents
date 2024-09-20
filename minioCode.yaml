@@ -95,8 +95,12 @@ implementation:
             parser.add_argument("--destination_prefix", type=str, required=True)
               
             args = parser.parse_args()
+            print("========args========")
+            print(args)
               
             minio_client = initialize_minio_client(args.minio_endpoint, args.minio_access_key, args.minio_secret_key)
+            print("============minio_client==========")
+            print(minio_client)
             s3_uri = extract_and_upload(minio_client, args.source_minio_path, args.destination_bucket, args.destination_prefix)
               
             if s3_uri:
