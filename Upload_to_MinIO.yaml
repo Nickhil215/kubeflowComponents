@@ -25,4 +25,3 @@ implementation:
       --destination_bucket,   {inputValue: destination_bucket},
       --destination_prefix,   {inputValue: destination_prefix}
     ]
-    outputPath: {s3_path: /tmp/s3_path.txt}
