@@ -10,7 +10,7 @@ inputs:
   - {name: destination_prefix, type: String, description: 'Prefix for the destination path in the destination bucket'}
 
 outputs:
-  - {name: s3_path, type: String, description: 'S3 path of the uploaded files'}
+  - {name: s3_path, type: String,default: 's3_path.txt', description: 'S3 path of the uploaded files'}
 
 implementation:
   container:
@@ -25,3 +25,4 @@ implementation:
       --destination_bucket,   {inputValue: destination_bucket},
       --destination_prefix,   {inputValue: destination_prefix}
     ]
+    # outputPath: {s3_path: /tmp/s3_path.txt}
