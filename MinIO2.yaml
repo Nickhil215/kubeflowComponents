@@ -1,0 +1,28 @@
+name: Upload to MinIO
+description: Uploads a file from a source MinIO path to a destination bucket and prefix.
+
+inputs:
+  - {name: MinIO Endpoint, type: String, description: 'MinIO server endpoint, e.g. "192.168.28.15:9000"'}
+  - {name: MinIO Access Key, type: String, description: 'MinIO access key for authentication'}
+  - {name: MinIO Secret Key, type: String, description: 'MinIO secret key for authentication'}
+  - {name: Source MinIO Path, type: String, description: 'Source MinIO file path to be uploaded'}
+  - {name: Destination Bucket, type: String, description: 'Destination MinIO bucket'}
+  - {name: Destination Prefix, type: String, description: 'Destination prefix within the bucket'}
+
+outputs:
+  - {name: Output, type: String, description: 'Status of the upload operation'}
+
+implementation:
+  container:
+    image: nikhilv215/upload-to-minio:latest
+    command: [
+      # Docker run command equivalent
+      "--minio_endpoint", {inputValue: MinIO Endpoint},
+      "--minio_access_key", {inputValue: MinIO Access Key},
+      "--minio_secret_key", {inputValue: MinIO Secret Key},
+      "--source_minio_path", {inputValue: Source MinIO Path},
+      "--destination_bucket", {inputValue: Destination Bucket},
+      "--destination_prefix", {inputValue: Destination Prefix}
+    ]
+    fileOutputs:
+      Output: "/tmp/upload_status.txt" # Replace with the path where you expect the output
