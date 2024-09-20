@@ -10,7 +10,7 @@ inputs:
   - {name: destination_prefix, type: String, description: 'Prefix for the destination path in the destination bucket'}
 
 outputs:
-  - {name: s3_path, type: String,default: 's3_path.txt', description: 'S3 path of the uploaded files'}
+  - {name: s3_path, type: Data, default: 's3_path.txt', description: 'S3 path of the uploaded files'}
 
 implementation:
   container:
