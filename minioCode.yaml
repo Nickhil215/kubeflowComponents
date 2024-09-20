@@ -22,7 +22,9 @@ implementation:
       - python3
       - -u
       - -c    
-      - pip install --quiet minio
+      - (PIP_DISABLE_PIP_VERSION_CHECK=1 python3 -m pip install --quiet --no-warn-script-location
+        'minio' || PIP_DISABLE_PIP_VERSION_CHECK=1 python3 -m
+        pip install --quiet --no-warn-script-location 'minio' --user) && "$0" "$@"
       - |
           import argparse
           import tarfile
