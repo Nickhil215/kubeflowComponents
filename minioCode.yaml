@@ -8,7 +8,7 @@ inputs:
   - {name: minio_endpoint, type: String, description: "MinIO server endpoint (with port)"}
   - {name: minio_access_key, type: String, description: "MinIO access key"}
   - {name: minio_secret_key, type: String, description: "MinIO secret key"}
-  - {name: source_minio_path, type: String, description: "Source MinIO path (minio://bucket/path)"}
+  - {name: source_minio_path, type: KerasModelHdf5, description: "Source MinIO path (minio://bucket/path)"}
   - {name: destination_bucket, type: String, description: "Destination bucket name in MinIO"}
   - {name: destination_prefix, type: String, description: "Prefix for destination in MinIO"}
 
