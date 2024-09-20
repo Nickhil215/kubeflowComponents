@@ -1,0 +1,28 @@
+name: Upload to MinIO
+description: Upload files from a MinIO bucket after extracting them from a .tgz archive.
+
+inputs:
+  - {name: minio_endpoint,     type: String, description: 'MinIO server endpoint (with port)'}
+  - {name: minio_access_key,   type: String, description: 'Access key for MinIO'}
+  - {name: minio_secret_key,   type: String, description: 'Secret key for MinIO'}
+  - {name: source_minio_path,  type: String, description: 'Source MinIO path (minio://bucket/object)'}
+  - {name: destination_bucket, type: String, description: 'Destination bucket in MinIO where files will be uploaded'}
+  - {name: destination_prefix, type: String, description: 'Prefix for the destination path in the destination bucket'}
+
+outputs:
+  - {name: s3_path, type: String, description: 'S3 path of the uploaded files'}
+
+implementation:
+  container:
+    image: nikhilv215/upload-to-minio:latest
+    command: ['python']
+    args: [
+      /app/upload_to_minio.py,
+      --minio_endpoint,       {inputValue: minio_endpoint},
+      --minio_access_key,     {inputValue: minio_access_key},
+      --minio_secret_key,     {inputValue: minio_secret_key},
+      --source_minio_path,    {inputValue: source_minio_path},
+      --destination_bucket,   {inputValue: destination_bucket},
+      --destination_prefix,   {inputValue: destination_prefix}
+    ]
+    outputPath: {s3_path: /tmp/s3_path.txt}
