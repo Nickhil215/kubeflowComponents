@@ -28,87 +28,86 @@ implementation:
       - -u
       - -c
       - |
-        pip install --quiet minio
-          import argparse
-          import tarfile
-          import io
-          import re
-          from minio import Minio
-          from minio.error import S3Error
+        import argparse
+        import tarfile
+        import io
+        import re
+        from minio import Minio
+        from minio.error import S3Error
           
-          # Initialize MinIO client
-          def initialize_minio_client(minio_endpoint, access_key, secret_key):
-              minio_client = Minio(
-                  minio_endpoint,  
-                  access_key=access_key,  
-                  secret_key=secret_key,  
-                  secure=False  
-              )
-              return minio_client
+        # Initialize MinIO client
+        def initialize_minio_client(minio_endpoint, access_key, secret_key):
+            minio_client = Minio(
+                minio_endpoint,  
+                access_key=access_key,  
+                secret_key=secret_key,  
+                secure=False  
+            )
+            return minio_client
+        
+        # Helper function to parse 'minio://bucket/path' format
+        def parse_minio_path(minio_path):
+            match = re.match(r"minio://([^/]+)/(.+)", minio_path)
+            if not match:
+                raise ValueError(f"Invalid minio path: {minio_path}")
+            bucket = match.group(1)
+            object_name = match.group(2)
+            return bucket, object_name
           
-          # Helper function to parse 'minio://bucket/path' format
-          def parse_minio_path(minio_path):
-              match = re.match(r"minio://([^/]+)/(.+)", minio_path)
-              if not match:
-                  raise ValueError(f"Invalid minio path: {minio_path}")
-              bucket = match.group(1)
-              object_name = match.group(2)
-              return bucket, object_name
-          
-          # Stream and extract the model, then upload it
-          def extract_and_upload(minio_client, source_minio_path, destination_bucket, destination_prefix):
-              try:
-                  source_bucket, source_object = parse_minio_path(source_minio_path)
-                  response = minio_client.get_object(source_bucket, source_object)
-                  file_data = io.BytesIO(response.read())
-                  response.close()
-                  response.release_conn()
+        # Stream and extract the model, then upload it
+        def extract_and_upload(minio_client, source_minio_path, destination_bucket, destination_prefix):
+            try:
+                source_bucket, source_object = parse_minio_path(source_minio_path)
+                response = minio_client.get_object(source_bucket, source_object)
+                file_data = io.BytesIO(response.read())
+                response.close()
+                response.release_conn()
                   
-                  with tarfile.open(fileobj=file_data, mode='r:gz') as tar:
-                      for member in tar.getmembers():
-                          if member.isfile():
-                              extracted_file = tar.extractfile(member)
-                              if extracted_file is not None:
-                                  file_data_bytes = extracted_file.read()
-                                  cleaned_name = member.name.replace('data/', '')
-                                  destination_object = destination_prefix + cleaned_name
-                                  minio_client.put_object(
-                                      bucket_name=destination_bucket,
-                                      object_name=destination_object,
-                                      data=io.BytesIO(file_data_bytes),
-                                      length=len(file_data_bytes)
-                                  )
+                with tarfile.open(fileobj=file_data, mode='r:gz') as tar:
+                    for member in tar.getmembers():
+                        if member.isfile():
+                            extracted_file = tar.extractfile(member)
+                            if extracted_file is not None:
+                                file_data_bytes = extracted_file.read()
+                                cleaned_name = member.name.replace('data/', '')
+                                destination_object = destination_prefix + cleaned_name
+                                minio_client.put_object(
+                                    bucket_name=destination_bucket,
+                                    object_name=destination_object,
+                                    data=io.BytesIO(file_data_bytes),
+                                    length=len(file_data_bytes)
+                                )
                   
-                  s3_uri = f"s3://{destination_bucket}/{destination_prefix}"
-                  return s3_uri
-              except S3Error as err:
-                  raise (f"Error interacting with MinIO: {err}")
-              except Exception as e:
-                  raise (f"Unexpected error: {e}")
+                s3_uri = f"s3://{destination_bucket}/{destination_prefix}"
+                return s3_uri
+            except S3Error as err:
+                raise (f"Error interacting with MinIO: {err}")
+            except Exception as e:
+                raise (f"Unexpected error: {e}")
           
-          def main():
-              parser = argparse.ArgumentParser(description="Upload extracted model files to MinIO")
-              parser.add_argument("--minio_endpoint", type=str, required=True)
-              parser.add_argument("--minio_access_key", type=str, required=True)
-              parser.add_argument("--minio_secret_key", type=str, required=True)
-              parser.add_argument("--source_minio_path", type=str, required=True)
-              parser.add_argument("--destination_bucket", type=str, required=True)
-              parser.add_argument("--destination_prefix", type=str, required=True)
+        def main():
+            parser = argparse.ArgumentParser(description="Upload extracted model files to MinIO")
+            parser.add_argument("--minio_endpoint", type=str, required=True)
+            parser.add_argument("--minio_access_key", type=str, required=True)
+            parser.add_argument("--minio_secret_key", type=str, required=True)
+            parser.add_argument("--source_minio_path", type=str, required=True)
+            parser.add_argument("--destination_bucket", type=str, required=True)
+            parser.add_argument("--destination_prefix", type=str, required=True)
               
-              args = parser.parse_args()
+            args = parser.parse_args()
               
-              minio_client = initialize_minio_client(args.minio_endpoint, args.minio_access_key, args.minio_secret_key)
-              s3_uri = extract_and_upload(minio_client, args.source_minio_path, args.destination_bucket, args.destination_prefix)
+            minio_client = initialize_minio_client(args.minio_endpoint, args.minio_access_key, args.minio_secret_key)
+            s3_uri = extract_and_upload(minio_client, args.source_minio_path, args.destination_bucket, args.destination_prefix)
               
-              if s3_uri:
-                  with open('/tmp/s3_path.txt', 'w') as f:
-                      f.write(s3_uri)
-                  print(f"Model successfully uploaded. S3 URI: {s3_uri}")
-              else:
-                  print("Failed to upload the model.")
+            if s3_uri:
+                with open('/tmp/s3_path.txt', 'w') as f:
+                    f.write(s3_uri)
+                print(f"Model successfully uploaded. S3 URI: {s3_uri}")
+            else:
+                print("Failed to upload the model.")
           
-          if __name__ == "__main__":
-              main()
+        if __name__ == "__main__":
+            main()
 
     args:
     - --minio_endpoint
