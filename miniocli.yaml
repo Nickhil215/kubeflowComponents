@@ -1,7 +1,7 @@
 name: Upload to MinIO
 description: Upload to MinIO with unique URI suffix
 inputs:
-- {name: Data}  # Input file path         
+- {name: Data}  # Input file path
 - {name: MinIO path prefix, type: String}  # MinIO bucket path prefix
 outputs:
 - {name: MinIO path, type: String}  # Output MinIO path
@@ -10,12 +10,18 @@ metadata:
     author: Nikhil <nikhil.v@mobiusdtaas.ai>
 implementation:
     container:
-        image: ubuntu:20.04  # Using Ubuntu base image to install mc
+        image: ubuntu:20.04  # Using Ubuntu base image
         command:
         - sh
         - -ex
         - -c
         - |
+            # Update the package list
+            sudo apt-get update
+
+            # Install wget
+            sudo apt-get install wget -y
+
             # Download the MinIO client (mc)
             wget https://dl.min.io/client/mc/release/linux-amd64/mc
 
@@ -23,7 +29,7 @@ implementation:
             chmod +x mc
 
             # Move mc to /usr/local/bin so it's available in the PATH
-            mv mc /usr/local/bin/
+            sudo mv mc /usr/local/bin/
 
             # Set up MinIO alias with your local MinIO instance
             mc alias set myminio http://192.168.28.15:9000 minio minio123
@@ -37,5 +43,5 @@ implementation:
             # Save the MinIO path to the output
             echo "myminio/$1" > "$2"
         - inputPath: Data
-        - concat: [{inputValue: MinIO path prefix}]
+        - concat: [{inputValue: MinIO path prefix}, '{{workflow.uid}}_{{pod.name}}']
         - outputPath: MinIO path
