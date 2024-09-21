@@ -40,9 +40,9 @@ implementation:
               mc mb myminio/$1
             fi
 
-            # Copy the contents of the Data directory to /<application name>/1/
+            # Copy the contents of the Data directory to /<application name>/
             if [ -d "$0" ]; then
-              mc cp --recursive "$0/" "myminio/$1/$2/1/"
+              mc cp --recursive "$0/" "myminio/$1/$2/"
             else
               echo "The specified input path does not exist or is not a directory."
             fi
@@ -50,8 +50,8 @@ implementation:
             # Create the output directory locally if needed
             mkdir -p "$(dirname "$3")"
 
-            # Save the MinIO path to the output
-            echo "myminio/$1/$2/1/" > "$3"
+            # Save the s3-style MinIO path to the output in the format s3://test/kevas
+            echo "s3://$1/$2/" > "$3"
         - inputPath: Data
         - inputValue: MinIO bucket name
         - inputValue: Application name
