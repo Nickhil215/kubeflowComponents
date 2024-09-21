@@ -1,7 +1,7 @@
 name: Upload to MinIO
 description: Upload to MinIO with unique URI suffix
 inputs:
-- {name: Data }  # Input file path
+- {name: Data}  # Input file path
 - {name: MinIO path prefix, type: String}  # MinIO bucket path prefix
 outputs:
 - {name: MinIO path, type: String}  # Output MinIO path
