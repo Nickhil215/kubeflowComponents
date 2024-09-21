@@ -17,10 +17,10 @@ implementation:
         - -c
         - |
             # Update the package list
-            sudo apt-get update
+            apt-get update
 
             # Install wget
-            sudo apt-get install wget -y
+            apt-get install wget -y
 
             # Download the MinIO client (mc)
             wget https://dl.min.io/client/mc/release/linux-amd64/mc
@@ -29,7 +29,7 @@ implementation:
             chmod +x mc
 
             # Move mc to /usr/local/bin so it's available in the PATH
-            sudo mv mc /usr/local/bin/
+            mv mc /usr/local/bin/
 
             # Set up MinIO alias with your local MinIO instance
             mc alias set myminio http://192.168.28.15:9000 minio minio123
@@ -43,5 +43,5 @@ implementation:
             # Save the MinIO path to the output
             echo "myminio/$1" > "$2"
         - inputPath: Data
-        - concat: [{inputValue: MinIO path prefix}, '{{workflow.uid}}_{{pod.name}}']
+        - concat: [{inputValue: MinIO path prefix}]
         - outputPath: MinIO path
