@@ -1,7 +1,7 @@
 name: Upload to MinIO
 description: Upload to MinIO with unique URI suffix
 inputs:
-- {name: Data}  # Input file path
+- {name: Data}  # Input file path or directory
 - {name: MinIO path prefix, type: String}  # MinIO bucket path prefix
 outputs:
 - {name: MinIO path, type: String}  # Output MinIO path
@@ -35,7 +35,7 @@ implementation:
             mc alias set myminio http://192.168.28.15:9000 minio minio123
 
             # Copy the data from the input path to MinIO with a unique suffix
-            mc cp "$0" "myminio/$1"
+            mc cp --recursive "$0" "myminio/$1"
 
             # Create the output directory locally if needed
             mkdir -p "$(dirname "$2")"
@@ -43,5 +43,5 @@ implementation:
             # Save the MinIO path to the output
             echo "myminio/$1" > "$2"
         - inputPath: Data
-        - concat: [{inputValue: MinIO path prefix}]
+        - concat: [{inputValue: MinIO path prefix}, '{{workflow.uid}}_{{pod.name}}']
         - outputPath: MinIO path
