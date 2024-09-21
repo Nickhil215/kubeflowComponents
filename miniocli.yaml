@@ -42,7 +42,7 @@ implementation:
 
             # Copy the contents of the Data directory to /<application name>/
             if [ -d "$0" ]; then
-              mc cp --recursive "$0/" "myminio/$1/$2/"
+              mc cp --recursive "$0/" "myminio/$1/$2/1/"
             else
               echo "The specified input path does not exist or is not a directory."
             fi
