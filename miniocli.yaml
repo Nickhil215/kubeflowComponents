@@ -40,8 +40,12 @@ implementation:
               mc mb myminio/$1
             fi
 
-            # Copy only the contents of the Data directory (not the directory itself) to /<application name>/1/
-            mc cp --recursive "$0/*" "myminio/$1/$2/1/"
+            # Copy the contents of the Data directory to /<application name>/1/
+            if [ -d "$0" ]; then
+              mc cp --recursive "$0/" "myminio/$1/$2/1/"
+            else
+              echo "The specified input path does not exist or is not a directory."
+            fi
 
             # Create the output directory locally if needed
             mkdir -p "$(dirname "$3")"
