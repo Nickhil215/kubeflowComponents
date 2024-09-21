@@ -1,5 +1,5 @@
 name: Upload to MinIO
-description: Upload to a fixed MinIO bucket
+description: Upload to a fixed MinIO bucket and directory
 inputs:
 - {name: Data}  # Input file path or directory
 - {name: MinIO bucket name, type: String}  # MinIO bucket name
@@ -39,14 +39,14 @@ implementation:
               mc mb myminio/$1
             fi
 
-            # Copy the data (recursively) to the fixed MinIO bucket
-            mc cp --recursive "$0" "myminio/$1/"
+            # Copy the data (recursively) to the /1/ subdirectory inside the bucket
+            mc cp --recursive "$0" "myminio/$1/1/"
 
             # Create the output directory locally if needed
             mkdir -p "$(dirname "$2")"
 
             # Save the MinIO path to the output
-            echo "myminio/$1/" > "$2"
+            echo "myminio/$1/1/" > "$2"
         - inputPath: Data
         - inputValue: MinIO bucket name
         - outputPath: MinIO path
