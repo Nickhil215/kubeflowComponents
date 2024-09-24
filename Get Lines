@@ -1,0 +1,23 @@
+name: Get Lines
+description: Gets the specified number of lines from the input file.
+
+inputs:
+- {name: Input 1, type: Data, description: 'Data for input 1'}
+- {name: Parameter 1, type: Integer, default: '100', description: 'Number of lines to copy'}
+
+outputs:
+- {name: Output 1, type: Data, description: 'Output 1 data.'}
+
+implementation:
+  container:
+    image: docker.io/nikhilv215/componant1@sha256:8687566de05911653bc7adef1d0ad9c7aa5e48569a1cbd93276d024e5a4942c9
+    command: [
+      python3, 
+      /pipelines/component/src/program.py,
+      --input1-path,
+      {inputPath: Input 1},
+      --param1, 
+      {inputValue: Parameter 1},
+      --output1-path, 
+      {outputPath: Output 1},
+    ]
