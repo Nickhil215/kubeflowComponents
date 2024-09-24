@@ -16,7 +16,7 @@ implementation:
     - sh
     - -c
     - (PIP_DISABLE_PIP_VERSION_CHECK=1 python3 -m pip install --quiet --no-warn-script-location
-      'kfp==1.4.0' || PIP_DISABLE_PIP_VERSION_CHECK=1 python3 -m pip install --quiet
+      'kfp==1.8.22' || PIP_DISABLE_PIP_VERSION_CHECK=1 python3 -m pip install --quiet
       --no-warn-script-location 'kfp==1.4.0' --user) && "$0" "$@"
     - sh
     - -ec
