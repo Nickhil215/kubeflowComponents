@@ -39,8 +39,7 @@ implementation:
             parquet.write_table(table, output_data_path)
 
         import argparse
-        _parser = argparse.ArgumentParser(prog='Convert csv to apache parquet',
-                                          description='Converts CSV table to Apache Parquet.\n\n    [Apache Parquet](https://parquet.apache.org/)\n\n    Annotations:\n        author: Alexey Volkov <alexey.volkov@ark-kun.com>')
+        _parser = argparse.ArgumentParser(prog='Convert csv to apache parquet', description='Converts CSV table to Apache Parquet.')
         _parser.add_argument("--data", dest="data_path", type=str, required=True, default=argparse.SUPPRESS)
         _parser.add_argument("--output-data", dest="output_data_path", type=_make_parent_dirs_and_return_path, required=True, default=argparse.SUPPRESS)
         _parsed_args = vars(_parser.parse_args())
