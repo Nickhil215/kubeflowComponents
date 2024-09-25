@@ -1,11 +1,5 @@
 name: Convert csv to apache parquet
-description: |
-  Converts CSV table to Apache Parquet.
-
-  [Apache Parquet](https://parquet.apache.org/)
-
-  Annotations:
-    author: Alexey Volkov <alexey.volkov@ark-kun.com>
+description: Converts CSV table to Apache Parquet.
 inputs:
   - name: data
     type: CSV
