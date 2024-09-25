@@ -2,7 +2,7 @@ name: Run component or pipeline
 metadata:
   annotations: {author: Alexey Volkov <alexey.volkov@ark-kun.com>}
 inputs:
-- {name: component_url, type: Url}
+- {name: component_url, type: String}
 - {name: arguments, type: JsonObject}
 - {name: endpoint, type: String, optional: true}
 - {name: wait_timeout_seconds, type: Float, optional: true}
