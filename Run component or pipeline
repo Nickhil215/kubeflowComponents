@@ -41,7 +41,7 @@ implementation:
           print('Submitting run...')
           if not endpoint:
               endpoint = os.environ['ML_PIPELINE_SERVICE_HOST'] + ':' + os.environ['ML_PIPELINE_SERVICE_PORT']
-          create_run_result = kfp.Client(host=endpoint).create_run_from_pipeline_func(op, arguments=arguments)
+          create_run_result = kfp.Client(host='http://192.168.28.17:8888').create_run_from_pipeline_func(op, arguments=arguments)
           run_id = str(create_run_result.run_id)
           print('Submitted run: ' + run_id)
           print('Waiting for the run to finish...')
