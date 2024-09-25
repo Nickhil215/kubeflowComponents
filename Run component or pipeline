@@ -1,4 +1,4 @@
-name: Run component or pipeline  
+name: Run component or pipeline
 metadata:
   annotations: {author: Alexey Volkov <alexey.volkov@ark-kun.com>}
 inputs:
