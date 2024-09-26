@@ -1,9 +1,9 @@
 name: Make REST Call
-description: A component that makes a REST API GET request with a Bearer token for authentication.
+description: A component that makes a REST API GET request. The Bearer token for authentication is optional.
 
 inputs:
 - {name: url, type: String, description: "The URL to send the request to."}
-- {name: auth_token, type: String, description: "The Bearer token for authentication."}
+- {name: auth_token, type: String, description: "The Bearer token for authentication.", optional: true}
 
 outputs:
 - {name: status_code, type: Integer, description: "The response status code."}
@@ -27,11 +27,12 @@ implementation:
       import json
       import argparse
 
-      def make_rest_call(url, auth_token):
-          headers = {
-              "Content-Type": "application/json",
-              "Authorization": f"Bearer {auth_token}"
-          }
+      def make_rest_call(url, auth_token=None):
+          headers = {"Content-Type": "application/json"}
+          
+          # Add Authorization header if token is provided
+          if auth_token:
+              headers["Authorization"] = f"Bearer {auth_token}"
 
           # Make the GET request
           response = requests.get(url, headers=headers)
@@ -52,9 +53,9 @@ implementation:
           return str(int_value)
 
       # Argument parser
-      _parser = argparse.ArgumentParser(prog='Make REST Call', description='A component that makes a REST API GET request with a Bearer token for authentication.')
+      _parser = argparse.ArgumentParser(prog='Make REST Call', description='A component that makes a REST API GET request. The Bearer token is optional.')
       _parser.add_argument("--url", dest="url", type=str, required=True)
-      _parser.add_argument("--auth_token", dest="auth_token", type=str, required=True)
+      _parser.add_argument("--auth_token", dest="auth_token", type=str, required=False)
       _parser.add_argument("----output-paths", dest="_output_paths", type=str, nargs=2)
 
       _parsed_args = vars(_parser.parse_args())
@@ -78,8 +79,11 @@ implementation:
     args:
     - --url
     - {inputValue: url}
-    - --auth_token
-    - {inputValue: auth_token}
+    - if:
+        cond: {isPresent: auth_token}
+        then:
+        - --auth_token
+        - {inputValue: auth_token}
     - '----output-paths'
     - {outputPath: status_code}
     - {outputPath: response_body}
