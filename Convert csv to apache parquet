@@ -10,33 +10,35 @@ implementation:
   container:
     image: python:3.9
     command:
-      - sh
-      - -c
-      - |
-        set -e
-        mkdir -p "$(dirname "$0")"
-        PIP_DISABLE_PIP_VERSION_CHECK=1 python3 -m pip install --quiet --no-warn-script-location 'pyarrow==17.0.0' || PIP_DISABLE_PIP_VERSION_CHECK=1 python3 -m pip install --quiet --no-warn-script-location 'pyarrow==17.0.0' --user
-        python3 -u -c "
-import os
-import argparse
-from pyarrow import csv, parquet
+    - sh
+    - -c
+    - (PIP_DISABLE_PIP_VERSION_CHECK=1 python3 -m pip install --quiet --no-warn-script-location
+      'pandas==2.2.2' || PIP_DISABLE_PIP_VERSION_CHECK=1 python3 -m pip install --quiet
+      --no-warn-script-location 'pandas==2.2.2' --user) && "$0" "$@"
+    - python3
+    - -u
+    - -c
+    - |
+      import os
+      import argparse
+      from pyarrow import csv, parquet
+        
+      def _make_parent_dirs_and_return_path(file_path: str):
+          os.makedirs(os.path.dirname(file_path), exist_ok=True)
+          return file_path
 
-def _make_parent_dirs_and_return_path(file_path: str):
-    os.makedirs(os.path.dirname(file_path), exist_ok=True)
-    return file_path
+      def convert_csv_to_apache_parquet(data_path, output_data_path):
+          '''Converts CSV table to Apache Parquet.'''
+          table = csv.read_csv(data_path)
+          parquet.write_table(table, output_data_path)
 
-def convert_csv_to_apache_parquet(data_path, output_data_path):
-    '''Converts CSV table to Apache Parquet.'''
-    table = csv.read_csv(data_path)
-    parquet.write_table(table, output_data_path)
+      parser = argparse.ArgumentParser(prog='Convert csv to apache parquet', description='Converts CSV table to Apache Parquet.')
+      parser.add_argument('--data', dest='data_path', required=True)
+      parser.add_argument('--output-data', dest='output_data_path', required=True)
+      args = parser.parse_args()
 
-parser = argparse.ArgumentParser(prog='Convert csv to apache parquet', description='Converts CSV table to Apache Parquet.')
-parser.add_argument('--data', dest='data_path', required=True)
-parser.add_argument('--output-data', dest='output_data_path', required=True)
-args = parser.parse_args()
-
-convert_csv_to_apache_parquet(args.data_path, args.output_data_path)
-        " --data "$1" --output-data "$2"
+      convert_csv_to_apache_parquet(args.data_path, args.output_data_path)
+                " --data "$1" --output-data "$2"
     args:
       - {inputPath: data}
       - {outputPath: output_data}
