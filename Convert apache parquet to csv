@@ -1,6 +1,6 @@
 name: Convert apache parquet to csv
 description: |-
-  Converts Apache Parquet to CSV.
+  Converts Apache Parquet to CSV .
 
       [Apache Parquet](https://parquet.apache.org/)
 
