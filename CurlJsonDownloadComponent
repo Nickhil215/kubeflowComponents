@@ -1,7 +1,7 @@
-name: Curl Component Using Shell
-description: A component that uses curl to fetch data and return JSON output.
+name: Curl Component Direct Input
+description: A component that executes a curl command and returns the JSON output.
 inputs:
-  - {name: url, type: String, description: 'The URL to send curl request'}
+  - {name: curl_command, type: String, description: 'The full curl command to execute'}
 outputs:
   - {name: output_json, type: Json, description: 'The JSON output from curl'}
 
@@ -12,8 +12,9 @@ implementation:
       - sh
       - -c
       - |
-        curl -s ${0} | tee /tmp/output.json
-        jq '.' /tmp/output.json > "$1"
+        mkdir -p $(dirname "$1")  # Ensure output directory exists
+        eval "${0}" | tee /tmp/output.json  # Execute the input curl command
+        jq '.' /tmp/output.json > "$1"  # Ensure output is in JSON format
     args:
-      - {inputValue: url}
+      - {inputValue: curl_command}
       - {outputPath: output_json}
