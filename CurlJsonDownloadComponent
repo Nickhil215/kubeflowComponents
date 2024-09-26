@@ -40,9 +40,9 @@ implementation:
           # Prepare the response data
           status_code = response.status_code
           try:
-              response_body = response.json()
+              response_body = response.json()  # Try to get JSON response
           except ValueError:
-              response_body = {"message": response.text}
+              response_body = {"message": response.text}  # Fallback to text if not JSON
 
           return status_code, response_body
 
