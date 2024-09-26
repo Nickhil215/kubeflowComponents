@@ -1,4 +1,4 @@
-name: Pandas Transform DataFrame in ApacheParquet format 
+name: Pandas Transform DataFrame in ApacheParquet format
 description: |-
   Transform DataFrame loaded from an ApacheParquet file.
 
@@ -23,13 +23,13 @@ outputs:
 - {name: transformed_table, type: ApacheParquet}
 implementation:
   container:
-    image: python:3.9
+    image: python:3.7
     command:
     - sh
     - -c
     - (PIP_DISABLE_PIP_VERSION_CHECK=1 python3 -m pip install --quiet --no-warn-script-location
-      'pandas==2.2.2' 'pyarrow==17.0.0' || PIP_DISABLE_PIP_VERSION_CHECK=1 python3
-      -m pip install --quiet --no-warn-script-location 'pandas==2.2.2' 'pyarrow==17.0.0'
+      'pandas==1.0.4' 'pyarrow==0.14.1' || PIP_DISABLE_PIP_VERSION_CHECK=1 python3
+      -m pip install --quiet --no-warn-script-location 'pandas==1.0.4' 'pyarrow==0.14.1'
       --user) && "$0" "$@"
     - python3
     - -u
@@ -71,7 +71,7 @@ implementation:
           namespace['df'].to_parquet(transformed_table_path)
 
       import argparse
-      _parser = argparse.ArgumentParser(prog='Pandas Transform DataFrame in ApacheParquet format', description='Transform DataFrame loaded from an ApacheParquet file.')
+      _parser = argparse.ArgumentParser(prog='Pandas Transform DataFrame in ApacheParquet format', description='Transform DataFrame loaded from an ApacheParquet file.\n\n    Inputs:\n        table: DataFrame to transform.\n        transform_code: Transformation code. Code is written in Python and can consist of multiple lines.\n            The DataFrame variable is called "df".\n            Examples:\n            - `df[\'prod\'] = df[\'X\'] * df[\'Y\']`\n            - `df = df[[\'X\', \'prod\']]`\n            - `df.insert(0, "is_positive", df["X"] > 0)`\n\n    Outputs:\n        transformed_table: Transformed DataFrame.\n\n    Annotations:\n        author: Alexey Volkov <alexey.volkov@ark-kun.com>')
       _parser.add_argument("--table", dest="table_path", type=str, required=True, default=argparse.SUPPRESS)
       _parser.add_argument("--transform-code", dest="transform_code", type=str, required=True, default=argparse.SUPPRESS)
       _parser.add_argument("--transformed-table", dest="transformed_table_path", type=_make_parent_dirs_and_return_path, required=True, default=argparse.SUPPRESS)
