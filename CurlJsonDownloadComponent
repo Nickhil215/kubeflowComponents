@@ -1,31 +1,19 @@
-name: Curl Component
-description: Component to perform curl and return JSON
+name: Curl Component Using Shell
+description: A component that uses curl to fetch data and return JSON output.
 inputs:
-  - {name: url, type: String, description: 'The URL for curl input'}
+  - {name: url, type: String, description: 'The URL to send curl request'}
 outputs:
-  - {name: output_json, type: Json, description: 'The JSON output'}
+  - {name: output_json, type: Json, description: 'The JSON output from curl'}
+
 implementation:
   container:
-    image: python:3.9
+    image: bash:latest
     command:
-      - python3
+      - sh
       - -c
       - |
-        import subprocess
-        import json
-        import sys
-        
-        url = sys.argv[1]
-        result = subprocess.run(['curl', url], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        if result.returncode == 0:
-            try:
-                json_data = json.loads(result.stdout)
-                with open('/output/output_json', 'w') as f:
-                    json.dump(json_data, f)
-            except json.JSONDecodeError:
-                print("Invalid JSON")
-        else:
-            print("Curl command failed", file=sys.stderr)
+        curl -s ${0} | tee /tmp/output.json
+        jq '.' /tmp/output.json > "$1"
     args:
       - {inputValue: url}
       - {outputPath: output_json}
