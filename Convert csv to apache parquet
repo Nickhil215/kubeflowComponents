@@ -14,7 +14,11 @@ implementation:
     - -c
     - (PIP_DISABLE_PIP_VERSION_CHECK=1 python3 -m pip install --quiet --no-warn-script-location
       'pandas==2.2.2' || PIP_DISABLE_PIP_VERSION_CHECK=1 python3 -m pip install --quiet
-      --no-warn-script-location 'pandas==2.2.2' --user) && python3 -u -c "
+      --no-warn-script-location 'pandas==2.2.2' --user) && "$0" "$@"
+    - python3
+    - -u
+    - -c
+    - |
       import os
       import argparse
       from pyarrow import csv, parquet
