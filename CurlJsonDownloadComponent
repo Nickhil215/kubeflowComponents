@@ -7,7 +7,7 @@ outputs:
 
 implementation:
   container:
-    image: bash:latest
+    image: 'ubuntu:20.04'
     command:
       - sh
       - -c
@@ -18,3 +18,4 @@ implementation:
     args:
       - {inputValue: curl_command}
       - {outputPath: output_json}
+
