@@ -16,6 +16,7 @@ implementation:
         mkdir -p $(dirname "$1")  # Ensure output directory exists
         eval "${0}" | tee /tmp/output.json  # Execute the input curl command
         jq '.' /tmp/output.json > "$1"  # Ensure output is in JSON format
+        cat /tmp/output.json
     args:
       - {inputValue: curl_command}
       - {outputPath: output_json}
