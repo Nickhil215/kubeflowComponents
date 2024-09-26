@@ -49,7 +49,7 @@ implementation:
           )
 
       import argparse
-      _parser = argparse.ArgumentParser(prog='Convert apache parquet to csv', description='Converts Apache Parquet to CSV.\n\n    [Apache Parquet](https://parquet.apache.org/)\n\n    Annotations:\n        author: Alexey Volkov <alexey.volkov@ark-kun.com>')
+      _parser = argparse.ArgumentParser(prog='Convert apache parquet to csv', description='Converts Apache Parquet to CSV.')
       _parser.add_argument("--data", dest="data_path", type=str, required=True, default=argparse.SUPPRESS)
       _parser.add_argument("--output-data", dest="output_data_path", type=_make_parent_dirs_and_return_path, required=True, default=argparse.SUPPRESS)
       _parsed_args = vars(_parser.parse_args())
