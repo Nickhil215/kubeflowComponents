@@ -14,11 +14,7 @@ implementation:
     - -c
     - (PIP_DISABLE_PIP_VERSION_CHECK=1 python3 -m pip install --quiet --no-warn-script-location
       'pandas==2.2.2' || PIP_DISABLE_PIP_VERSION_CHECK=1 python3 -m pip install --quiet
-      --no-warn-script-location 'pandas==2.2.2' --user) && "$0" "$@"
-    - python3
-    - -u
-    - -c
-    - |
+      --no-warn-script-location 'pandas==2.2.2' --user) && python3 -u -c "
       import os
       import argparse
       from pyarrow import csv, parquet
@@ -38,7 +34,9 @@ implementation:
       args = parser.parse_args()
 
       convert_csv_to_apache_parquet(args.data_path, args.output_data_path)
-                " --data "$1" --output-data "$2"
+    "
     args:
+      - --data
       - {inputPath: data}
+      - --output-data
       - {outputPath: output_data}
