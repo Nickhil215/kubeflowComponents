@@ -1,4 +1,4 @@
-name: Pandas Transform DataFrame in ApacheParquet format
+name: Pandas Transform DataFrame in ApacheParquet format 
 description: |-
   Transform DataFrame loaded from an ApacheParquet file.
 
