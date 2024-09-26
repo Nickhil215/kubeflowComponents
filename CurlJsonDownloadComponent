@@ -1,23 +1,79 @@
-name: Curl Component Direct Input
-description: A component that executes a curl command and returns the JSON output.
+name: Make REST Call
+description: A component that makes a REST API GET request with a Bearer token for authentication.
+
 inputs:
-  - {name: curl_command, type: String, description: 'The full curl command to execute'}
+- {name: url, type: String, description: "The URL to send the request to."}
+- {name: auth_token, type: String, description: "The Bearer token for authentication."}
+
 outputs:
-  - {name: output_json, type: Json, description: 'The JSON output from curl'}
+- {name: status_code, type: Integer, description: "The response status code."}
+- {name: response_body, type: JsonObject, description: "The response body in JSON format."}
 
 implementation:
   container:
-    image: 'ubuntu:20.04'  # Base image
+    image: python:3.8
     command:
-      - sh
-      - -c
-      - |
-        apt-get update && apt-get install -y curl jq  # Install curl and jq
-        mkdir -p $(dirname "$1")  # Ensure output directory exists
-        echo "Executing curl command: ${0}"  # Print the curl command being executed
-        result=$(eval "${0}")  # Execute the input curl command and store the output
-        echo "$result"  # Directly print the output of the curl command
-        echo "$result" | jq '.' > "$1"  # Ensure output is in JSON format and save to the output path
+    - python3
+    - -u
+    - -c
+    - |
+      import requests
+      import json
+      import argparse
+
+      def make_rest_call(url, auth_token):
+          headers = {
+              "Content-Type": "application/json",
+              "Authorization": f"Bearer {auth_token}"
+          }
+
+          # Make the GET request
+          response = requests.get(url, headers=headers)
+          
+          # Prepare the response data
+          status_code = response.status_code
+          try:
+              response_body = response.json()
+          except ValueError:
+              response_body = {"message": response.text}
+
+          return status_code, response_body
+
+      def _serialize_json(obj) -> str:
+          return json.dumps(obj, sort_keys=True)
+
+      def _serialize_int(int_value: int) -> str:
+          return str(int_value)
+
+      # Argument parser
+      _parser = argparse.ArgumentParser(prog='Make REST Call', description='A component that makes a REST API GET request with a Bearer token for authentication.')
+      _parser.add_argument("--url", dest="url", type=str, required=True)
+      _parser.add_argument("--auth_token", dest="auth_token", type=str, required=True)
+      _parser.add_argument("----output-paths", dest="_output_paths", type=str, nargs=2)
+
+      _parsed_args = vars(_parser.parse_args())
+      _output_files = _parsed_args.pop("_output_paths", [])
+
+      # Call the function and get outputs
+      _outputs = make_rest_call(**_parsed_args)
+
+      # Define output serializers
+      _output_serializers = [_serialize_int, _serialize_json]
+
+      # Write outputs to files
+      import os
+      for idx, output_file in enumerate(_output_files):
+          try:
+              os.makedirs(os.path.dirname(output_file))
+          except OSError:
+              pass
+          with open(output_file, 'w') as f:
+              f.write(_output_serializers[idx](_outputs[idx]))
     args:
-      - {inputValue: curl_command}
-      - {outputPath: output_json}
+    - --url
+    - {inputValue: url}
+    - --auth_token
+    - {inputValue: auth_token}
+    - '----output-paths'
+    - {outputPath: status_code}
+    - {outputPath: response_body}
