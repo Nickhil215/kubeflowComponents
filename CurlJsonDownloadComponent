@@ -1,0 +1,29 @@
+name: CurlJsonDownloadComponent
+description: This component executes a curl command and returns the output in JSON format.
+inputs:
+  - {name: curl_command, type: string, description: "The complete curl command to be executed."}
+outputs:
+  - {name: JsonData, type: Json, description: "The JSON output from the curl command."}
+metadata:
+  annotations:
+    author: Your Name <your.email@example.com>
+implementation:
+  container:
+    image: byrnedo/alpine-curl@sha256:548379d0a4a0c08b9e55d9d87a592b7d35d9ab3037f4936f5ccd09d0b625a342
+    command:
+      - sh
+      - -exc
+      - |
+        curl_command="$0"
+        output_file="$1"
+
+        # Execute the curl command and save output to a file
+        eval "$curl_command" > "$output_file"
+
+        # Check if the output is valid JSON
+        if ! jq empty "$output_file"; then
+          echo "Invalid JSON returned by curl command" >&2
+          exit 1
+        fi
+    - inputValue: curl_command
+    - outputPath: JsonData
