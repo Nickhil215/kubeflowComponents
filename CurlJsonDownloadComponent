@@ -14,9 +14,10 @@ implementation:
       - |
         apt-get update && apt-get install -y curl jq  # Install curl and jq
         mkdir -p $(dirname "$1")  # Ensure output directory exists
-        eval "${0}" | tee /tmp/output.json  # Execute the input curl command
-        jq '.' /tmp/output.json > "$1"  # Ensure output is in JSON format
-        cat /tmp/output.json
+        echo "Executing curl command: ${0}"  # Print the curl command being executed
+        result=$(eval "${0}")  # Execute the input curl command and store the output
+        echo "$result"  # Directly print the output of the curl command
+        echo "$result" | jq '.' > "$1"  # Ensure output is in JSON format and save to the output path
     args:
       - {inputValue: curl_command}
       - {outputPath: output_json}
