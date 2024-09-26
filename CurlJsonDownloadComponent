@@ -1,29 +1,31 @@
-name: CurlJsonDownloadComponent
-description: This component executes a curl command and returns the output in JSON format.
+name: Curl Component
+description: Component to perform curl and return JSON
 inputs:
-  - {name: curl_command, type: string, description: "The complete curl command to be executed."}
+  - {name: url, type: String, description: 'The URL for curl input'}
 outputs:
-  - {name: JsonData, type: Json, description: "The JSON output from the curl command."}
-metadata:
-  annotations:
-    author: Your Name <your.email@example.com>
+  - {name: output_json, type: Json, description: 'The JSON output'}
 implementation:
   container:
-    image: byrnedo/alpine-curl@sha256:548379d0a4a0c08b9e55d9d87a592b7d35d9ab3037f4936f5ccd09d0b625a342
+    image: python:3.9
     command:
-      - sh
-      - -exc
+      - python3
+      - -c
       - |
-        curl_command="$0"
-        output_file="$1"
-
-        # Execute the curl command and save output to a file
-        eval "$curl_command" > "$output_file"
-
-        # Check if the output is valid JSON
-        if ! jq empty "$output_file"; then
-          echo "Invalid JSON returned by curl command" >&2
-          exit 1
-        fi
-    - inputValue: curl_command
-    - outputPath: JsonData
+        import subprocess
+        import json
+        import sys
+        
+        url = sys.argv[1]
+        result = subprocess.run(['curl', url], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        if result.returncode == 0:
+            try:
+                json_data = json.loads(result.stdout)
+                with open('/output/output_json', 'w') as f:
+                    json.dump(json_data, f)
+            except json.JSONDecodeError:
+                print("Invalid JSON")
+        else:
+            print("Curl command failed", file=sys.stderr)
+    args:
+      - {inputValue: url}
+      - {outputPath: output_json}
