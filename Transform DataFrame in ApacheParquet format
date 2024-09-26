@@ -64,7 +64,7 @@ implementation:
           '''
           import pandas
 
-          df = pandas.read_parquet(table_path)
+          df = pandas.read_parquet(table_path, on_bad_lines='skip')
           # The namespace is needed so that the code can replace `df`. For example df = df[['X']]
           namespace = locals()
           exec(transform_code, namespace)
