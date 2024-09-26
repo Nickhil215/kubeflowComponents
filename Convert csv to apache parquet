@@ -1,5 +1,5 @@
 name: Convert csv to apache parquet
-description: Converts CSV table to Apache Parquet .
+description: Converts CSV table to Apache Parquet.
 inputs:
   - name: data
     type: CSV
