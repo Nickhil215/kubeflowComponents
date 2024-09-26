@@ -1,11 +1,5 @@
 name: Convert apache parquet to csv
-description: |-
-  Converts Apache Parquet to CSV .
-
-      [Apache Parquet](https://parquet.apache.org/)
-
-      Annotations:
-          author: Alexey Volkov <alexey.volkov@ark-kun.com>
+description: Converts Apache Parquet to CSV .
 inputs:
 - {name: data, type: ApacheParquet}
 outputs:
