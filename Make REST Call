@@ -1,0 +1,89 @@
+name: Make REST Call
+description: A component that makes a REST API GET request. The Bearer token for authentication is optional.
+
+inputs:
+- {name: url, type: String, description: "The URL to send the request to."}
+- {name: auth_token, type: String, description: "The Bearer token for authentication.", optional: true}
+
+outputs:
+- {name: status_code, type: Integer, description: "The response status code."}
+- {name: response_body, type: JsonObject, description: "The response body in JSON format."}
+
+implementation:
+  container:
+    image: python:3.9
+    command:
+    - sh
+    - -c
+    - (PIP_DISABLE_PIP_VERSION_CHECK=1 python3 -m pip install --quiet --no-warn-script-location
+      'requests==2.32.3'  || PIP_DISABLE_PIP_VERSION_CHECK=1 python3 -m
+      pip install --quiet --no-warn-script-location 'requests==2.32.3'
+      --user) && "$0" "$@"
+    - python3
+    - -u
+    - -c
+    - |
+      import requests
+      import json
+      import argparse
+
+      def make_rest_call(url, auth_token=None):
+          headers = {"Content-Type": "application/json"}
+          
+          # Add Authorization header if token is provided
+          if auth_token:
+              headers["Authorization"] = f"Bearer {auth_token}"
+
+          # Make the GET request
+          response = requests.get(url, headers=headers)
+          
+          # Prepare the response data
+          status_code = response.status_code
+          try:
+              response_body = response.json()  # Try to get JSON response
+          except ValueError:
+              response_body = {"message": response.text}  # Fallback to text if not JSON
+
+          return status_code, response_body
+
+      def _serialize_json(obj) -> str:
+          return json.dumps(obj, sort_keys=True)
+
+      def _serialize_int(int_value: int) -> str:
+          return str(int_value)
+
+      # Argument parser
+      _parser = argparse.ArgumentParser(prog='Make REST Call', description='A component that makes a REST API GET request. The Bearer token is optional.')
+      _parser.add_argument("--url", dest="url", type=str, required=True)
+      _parser.add_argument("--auth_token", dest="auth_token", type=str, required=False)
+      _parser.add_argument("----output-paths", dest="_output_paths", type=str, nargs=2)
+
+      _parsed_args = vars(_parser.parse_args())
+      _output_files = _parsed_args.pop("_output_paths", [])
+
+      # Call the function and get outputs
+      _outputs = make_rest_call(**_parsed_args)
+
+      # Define output serializers
+      _output_serializers = [_serialize_int, _serialize_json]
+
+      # Write outputs to files
+      import os
+      for idx, output_file in enumerate(_output_files):
+          try:
+              os.makedirs(os.path.dirname(output_file))
+          except OSError:
+              pass
+          with open(output_file, 'w') as f:
+              f.write(_output_serializers[idx](_outputs[idx]))
+    args:
+    - --url
+    - {inputValue: url}
+    - if:
+        cond: {isPresent: auth_token}
+        then:
+        - --auth_token
+        - {inputValue: auth_token}
+    - '----output-paths'
+    - {outputPath: status_code}
+    - {outputPath: response_body}
