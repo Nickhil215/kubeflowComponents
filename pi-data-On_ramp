@@ -1,0 +1,103 @@
+name: Make Paginated REST Call
+description: A Kubeflow component that makes a paginated REST API GET request. The Bearer token for authentication is optional.
+
+inputs:
+- {name: schemaId, type: String, description: "The Schema ID to be used in the API request."}
+- {name: size, type: Integer, description: "The number of entities per page.", default: 10}
+- {name: auth_token, type: String, description: "The Bearer token for authentication.", optional: true}
+
+outputs:
+- {name: response_data, type: JsonObject, description: "The combined list of entities from all pages."}
+
+implementation:
+  container:
+    image: python:3.9
+    command:
+    - sh
+    - -c
+    - (PIP_DISABLE_PIP_VERSION_CHECK=1 python3 -m pip install --quiet --no-warn-script-location
+      'requests==2.32.3' || PIP_DISABLE_PIP_VERSION_CHECK=1 python3 -m
+      pip install --quiet --no-warn-script-location 'requests==2.32.3' --user) && "$0" "$@"
+    - python3
+    - -u
+    - -c
+    - |
+      import requests
+      import json
+      import argparse
+
+      def make_paginated_rest_call(schemaId, size=10, auth_token=None):
+          headers = {"Content-Type": "application/json"}
+          
+          if auth_token:
+              headers["Authorization"] = f"Bearer {auth_token}"
+          
+          data = []
+          page = 0
+          
+          while True:
+              # Make the GET request
+              url = f"https://ig.aidtaas.com/pi-get-data-quarkus/v1.0/schemas/{schemaId}/instances/list?page={page}&size={size}"
+              response = requests.get(url, headers=headers)
+              
+              try:
+                  response_body = response.json()  # Try to get JSON response
+                  if response_body is None:
+                      break
+                  else:
+                      if 'entities' in response_body:
+                          entity_size = len(response_body['entities'])
+                          data.extend(response_body['entities'])
+                          if entity_size < size:
+                              break
+                      else:
+                          break
+              except ValueError:
+                  break
+              page += 1
+          
+          return data
+
+      def _serialize_json(obj) -> str:
+          return json.dumps(obj, sort_keys=True)
+
+      # Argument parser
+      _parser = argparse.ArgumentParser(prog='Make Paginated REST Call', description='A Kubeflow component that makes a paginated REST API GET request. The Bearer token is optional.')
+      _parser.add_argument("--schemaId", dest="schemaId", type=str, required=True)
+      _parser.add_argument("--size", dest="size", type=int, required=False, default=10)
+      _parser.add_argument("--auth_token", dest="auth_token", type=str, required=False)
+      _parser.add_argument("----output-paths", dest="_output_paths", type=str, nargs=1)
+
+      _parsed_args = vars(_parser.parse_args())
+      _output_files = _parsed_args.pop("_output_paths", [])
+
+      # Call the function and get outputs
+      _outputs = make_paginated_rest_call(**_parsed_args)
+
+      # Define output serializers
+      _output_serializers = [_serialize_json]
+
+      # Write outputs to files
+      import os
+      for idx, output_file in enumerate(_output_files):
+          try:
+              os.makedirs(os.path.dirname(output_file))
+          except OSError:
+              pass
+          with open(output_file, 'w') as f:
+              f.write(_output_serializers[idx](_outputs))
+    args:
+    - --schemaId
+    - {inputValue: schemaId}
+    - if:
+        cond: {isPresent: size}
+        then:
+        - --size
+        - {inputValue: size}
+    - if:
+        cond: {isPresent: auth_token}
+        then:
+        - --auth_token
+        - {inputValue: auth_token}
+    - '----output-paths'
+    - {outputPath: response_data}
