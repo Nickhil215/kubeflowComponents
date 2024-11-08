@@ -3,16 +3,16 @@ description: Perform DBSCAN clustering with automatic parameter tuning and clust
 
 inputs:
   - {name: input_data,     type: String,  default: '',              description: 'Path to input data file (.csv or .parquet)'}
-  - {name: output_dir,     type: String,  default: './model_output', description: 'Directory to save the model and analysis results'}
+  - {name: output_dir,     type: String,  default: './model_output',optional: true, description: 'Directory to save the model and analysis results'}
 
 outputs:
-  - {name: cluster_analysis,  type: String,  description: 'Cluster analysis results with characteristic patterns'}
-  - {name: model_path,        type: String,  description: 'Path to the saved model file (model_complete.joblib)'}
-  - {name: best_parameters,   type: String,  description: 'Best DBSCAN parameters found during tuning'}
+  - {name: cluster_analysis,  type: String}
+  - {name: model_path,        type: String}
+  - {name: best_parameters,   type: String}
 
 implementation:
   container:
-    image: nikhilv215/dbscantest:latest
+    image: nikhilv215/dbscantest1:latest
     command: [python]
     args: [
       './src/dbscan_trainer.py',
