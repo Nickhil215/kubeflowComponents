@@ -12,7 +12,7 @@ outputs:
 
 implementation:
   container:
-    image: nikhilv215/dbscantest3:latest
+    image: nikhilv215/dbscantest4:latest
     command: [python]
     args: [
       './src/dbscan_trainer.py',
