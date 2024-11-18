@@ -1,0 +1,125 @@
+name: Enhanced Data Loader and Splitter
+description: |-
+  Load data from various formats, process it, and split into training and validation datasets.
+
+  Inputs:
+      data_path: Path to the input data file. Supported formats: CSV, JSON, Parquet, XLSX, PKL.
+      output_train: Path to save the training data file.
+      output_val: Path to save the validation data file.
+      val_size: Fraction of data to allocate for validation (default: 0.2).
+      output_format: Format for the output files (CSV, JSON, Parquet). If not specified, matches input format.
+      output_metadata: Path to save metadata about the split.
+
+  Outputs:
+      metadata: Metadata about the processed and split datasets, including the number of samples.
+
+  Annotations:
+      author: Your Name <your.email@example.com>
+      version: 1.0
+inputs:
+- {name: data_path, type: String}
+- {name: output_train, type: String}
+- {name: output_val, type: String}
+- {name: val_size, type: Float, default: 0.2}
+- {name: output_format, type: String, optional: true}
+- {name: output_metadata, type: String}
+outputs:
+- {name: metadata, type: String}
+metadata:
+  annotations:
+    author: Your Name <your.email@example.com>
+    version: 1.0
+implementation:
+  container:
+    image: python:3.9
+    command:
+    - sh
+    - -c
+    - (PIP_DISABLE_PIP_VERSION_CHECK=1 python3 -m pip install --quiet --no-warn-script-location
+      pandas numpy scikit-learn pyarrow || PIP_DISABLE_PIP_VERSION_CHECK=1 python3 -m pip install --quiet
+      --no-warn-script-location pandas numpy scikit-learn pyarrow --user) && "$0" "$@"
+    - python3
+    - -u
+    - -c
+    - |
+      import pandas as pd
+      import numpy as np
+      import json
+      import yaml
+      import logging
+      import argparse
+      from pathlib import Path
+      from sklearn.model_selection import train_test_split
+
+      class DataLoader:
+          SUPPORTED_FORMATS = {
+              '.csv': pd.read_csv,
+              '.json': pd.read_json,
+              '.parquet': pd.read_parquet,
+              '.xlsx': pd.read_excel,
+              '.pkl': pd.read_pickle
+          }
+
+          def __init__(self):
+              logging.basicConfig(level=logging.INFO)
+              self.logger = logging.getLogger('DataLoader')
+
+          def load_data(self, input_path):
+              ext = Path(input_path).suffix.lower()
+              if ext not in self.SUPPORTED_FORMATS:
+                  raise ValueError(f"Unsupported format: {ext}")
+              return self.SUPPORTED_FORMATS[ext](input_path)
+
+          def save_data(self, data, output_path, fmt=None):
+              if fmt is None:
+                  fmt = Path(output_path).suffix.lower()
+              Path(output_path).parent.mkdir(parents=True, exist_ok=True)
+              if fmt == '.csv':
+                  data.to_csv(output_path, index=False)
+              elif fmt == '.json':
+                  data.to_json(output_path, orient='records')
+              elif fmt == '.parquet':
+                  data.to_parquet(output_path)
+              else:
+                  raise ValueError(f"Unsupported format: {fmt}")
+
+          def process_data(self, data_path, output_train, output_val, val_size, output_format):
+              df = self.load_data(data_path)
+              train_df, val_df = train_test_split(df, test_size=val_size, random_state=42)
+              self.save_data(train_df, output_train, output_format)
+              self.save_data(val_df, output_val, output_format)
+              return {
+                  "train_data": output_train,
+                  "val_data": output_val,
+                  "train_samples": len(train_df),
+                  "val_samples": len(val_df),
+                  "columns": list(df.columns)
+              }
+
+      parser = argparse.ArgumentParser(description='Enhanced Data Loader')
+      parser.add_argument('--data_path', required=True)
+      parser.add_argument('--output_train', required=True)
+      parser.add_argument('--output_val', required=True)
+      parser.add_argument('--val_size', type=float, default=0.2)
+      parser.add_argument('--output_format', default=None)
+      parser.add_argument('--output_metadata', required=True)
+
+      args = parser.parse_args()
+      loader = DataLoader()
+      metadata = loader.process_data(args.data_path, args.output_train, args.output_val, args.val_size, args.output_format)
+
+      with open(args.output_metadata, 'w') as meta_file:
+          json.dump(metadata, meta_file)
+    args:
+    - --data_path
+    - {inputValue: data_path}
+    - --output_train
+    - {inputPath: output_train}
+    - --output_val
+    - {inputPath: output_val}
+    - --val_size
+    - {inputValue: val_size}
+    - --output_format
+    - {inputValue: output_format}
+    - --output_metadata
+    - {outputPath: metadata}
