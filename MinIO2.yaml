@@ -5,7 +5,7 @@ inputs:
 - {name: MinIO bucket name, type: String}  # MinIO bucket name
 - {name: Application name, type: String}  # Application name to include in the path
 outputs:
-- {name: MinIO path, type: String}  # Output MinIO path
+- {name: MinIO path,optional: true, type: String}  # Output MinIO path
 metadata:
   annotations:
     author: Nikhil <nikhil.v@mobiusdtaas.ai>
