@@ -1,44 +1,80 @@
-name: Data Loader Component
-description: Component for loading and splitting data from various sources
+# name: Data Loader Component
+# description: Component for loading and splitting data from various sources
+
+# inputs:
+#   - {name: data_source, type: String, description: 'Path or URL to input data'}
+#   - {name: val_size, type: Float, default: '0.2', description: 'Validation set size'}
+#   - {name: required_columns, type: JsonArray, optional: true, description: 'List of required column names'}
+#   - {name: stratify_column, type: String, optional: true, description: 'Column to use for stratified split'}
+#   - {name: output_format, type: String, default: 'csv', description: 'Output format (csv/xlsx/json/parquet)'}
+
+# outputs:
+#   - {name: train_data, type: Dataset, description: 'Training dataset'}
+#   - {name: val_data, type: Dataset, description: 'Validation dataset'}
+#   - {name: metadata, type: JsonObject, description: 'Metadata about the splits'}
+
+# implementation:
+#   container:
+#     image: nikhilv215/data_loader:latest
+#     command: [
+#       "python", "src/data_loader_final.py",
+#       "--data-source", {inputValue: data_source},
+#       "--val-size", {inputValue: val_size},
+#       "--required-columns", {inputValue: required_columns},
+#       "--stratify-column", {inputValue: stratify_column},
+#       "--output-format", {inputValue: output_format},
+#       "--output-paths",
+#       {outputPath: train_data},
+#       {outputPath: val_data},
+#       {outputPath: metadata}
+#     ]
+
+#     fileOutputs:
+#       train_data: /output/train_data
+#       val_data: /output/val_data
+#       metadata: /output/metadata.json
+
+# # metadata:
+# #   annotations:
+# #     author: "Your Name"
+# #     version: "1.0.0"
+# #     description: |
+# #       Data loader component that supports multiple data sources (URL/local) 
+# #       and formats (CSV/Excel/JSON/Parquet). Includes validation and 
+# #       stratified splitting capabilities.
+
+
+name: Data Loader
+description: Splits input data into training and validation sets with configurable validation size
 
 inputs:
-  - {name: data_source, type: String, description: 'Path or URL to input data'}
-  - {name: val_size, type: Float, default: '0.2', description: 'Validation set size'}
-  - {name: required_columns, type: JsonArray, optional: true, description: 'List of required column names'}
-  - {name: stratify_column, type: String, optional: true, description: 'Column to use for stratified split'}
-  - {name: output_format, type: String, default: 'csv', description: 'Output format (csv/xlsx/json/parquet)'}
+  - {name: data_input, type: String, description: 'Input CSV file path or direct CSV content'}
+  - {name: val_size, type: Float, default: '0.2', description: 'Validation set size (between 0 and 1)'}
 
 outputs:
-  - {name: train_data, type: Dataset, description: 'Training dataset'}
-  - {name: val_data, type: Dataset, description: 'Validation dataset'}
-  - {name: metadata, type: JsonObject, description: 'Metadata about the splits'}
+  - {name: train_data, type: String, description: 'Training data in CSV format'}
+  - {name: val_data, type: String, description: 'Validation data in CSV format'}
+  - {name: metadata, type: JsonObject, description: 'Metadata including dataset sizes and file paths'}
 
 implementation:
   container:
-    image: nikhilv215/data_loader:latest
+    image: nikhilv215/data_loader:1
     command: [
-      "python", "src/data_loader_final.py",
-      "--data-source", {inputValue: data_source},
-      "--val-size", {inputValue: val_size},
-      "--required-columns", {inputValue: required_columns},
-      "--stratify-column", {inputValue: stratify_column},
-      "--output-format", {inputValue: output_format},
-      "--output-paths",
+      python3,
+      -m,
+      data_loader,
+      --data-input,
+      {inputPath: data_input},
+      --val-size,
+      {inputValue: val_size},
+      --output-paths,
       {outputPath: train_data},
       {outputPath: val_data},
       {outputPath: metadata}
     ]
 
-    fileOutputs:
-      train_data: /output/train_data
-      val_data: /output/val_data
-      metadata: /output/metadata.json
-
 metadata:
   annotations:
-    author: "Your Name"
-    version: "1.0.0"
-    description: |
-      Data loader component that supports multiple data sources (URL/local) 
-      and formats (CSV/Excel/JSON/Parquet). Includes validation and 
-      stratified splitting capabilities.
+    author: Your Name
+    framework: Pandas & Scikit-learn
+    version: '1.0.0'
