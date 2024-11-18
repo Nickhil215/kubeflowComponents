@@ -1,28 +1,44 @@
 name: Upload to MinIO
-description: Uploads a file from a source MinIO path to a destination bucket and prefix.
-
+description: Upload to a fixed MinIO bucket with application name and directory
 inputs:
-  - {name: MinIO Endpoint, type: String, description: 'MinIO server endpoint, e.g. "192.168.28.15:9000"'}
-  - {name: MinIO Access Key, type: String, description: 'MinIO access key for authentication'}
-  - {name: MinIO Secret Key, type: String, description: 'MinIO secret key for authentication'}
-  - {name: Source MinIO Path, type: KerasModelHdf5, description: 'Source MinIO file path to be uploaded'}
-  - {name: Destination Bucket, type: String, description: 'Destination MinIO bucket'}
-  - {name: Destination Prefix, type: String, description: 'Destination prefix within the bucket'}
-
+- {name: Data}  # Input file path or directory
+- {name: MinIO bucket name, type: String}  # MinIO bucket name
+- {name: Application name, type: String}  # Application name to include in the path
 outputs:
-  - {name: Output, type: String, description: 'Status of the upload operation'}
-
+- {name: MinIO path, type: String}  # Output MinIO path
 implementation:
-  container:
-    image: nikhilv215/upload-to-minio:latest
-    command: [
-      # Docker run command equivalent
-      "--minio_endpoint", {inputValue: MinIO Endpoint},
-      "--minio_access_key", {inputValue: MinIO Access Key},
-      "--minio_secret_key", {inputValue: MinIO Secret Key},
-      "--source_minio_path", {inputValue: Source MinIO Path},
-      "--destination_bucket", {inputValue: Destination Bucket},
-      "--destination_prefix", {inputValue: Destination Prefix}
-    ]
-    fileOutputs:
-      Output: "/tmp/upload_status.txt" # Replace with the path where you expect the output
+    container:
+        image: nikhilv215/minio_update:1  # Using the custom image
+        command:
+        - sh
+        - -ex
+        - -c
+        - |
+            #!/bin/sh
+            DATA_PATH="$1"
+            BUCKET_NAME="$2"
+            APP_NAME="$3"
+            MINIO_PATH="$4"
+
+            # Set up MinIO alias
+            mc alias set myminio http://minio-service.kubeflow.svc.cluster.local:9000 minio minio123
+
+            # Check if the bucket exists, if not create it
+            if ! mc ls myminio/"$BUCKET_NAME"; then
+              mc mb myminio/"$BUCKET_NAME"
+            fi
+
+            # Copy the contents to MinIO
+            if [ -d "$DATA_PATH" ]; then
+              mc cp --recursive "$DATA_PATH/" "myminio/$BUCKET_NAME/$APP_NAME/1/"
+            else
+              echo "The specified input path does not exist or is not a directory."
+            fi
+
+            # Save the MinIO path to the output
+            echo "s3://$BUCKET_NAME/$APP_NAME/" > "$MINIO_PATH"
+        args:
+        - {inputPath: Data}
+        - {inputValue: MinIO bucket name}
+        - {inputValue: Application name}
+        - {outputPath: MinIO path}
