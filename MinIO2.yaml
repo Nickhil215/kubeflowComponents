@@ -1,7 +1,7 @@
 name: Upload to MinIO
 description: Upload to a fixed MinIO bucket with application name and directory
 inputs:
-- {name: Data, type: Directory}  # Input file path or directory
+- {name: Data }  # Input file path or directory
 - {name: MinIO bucket name, type: String}  # MinIO bucket name
 - {name: Application name, type: String}  # Application name to include in the path
 outputs:
