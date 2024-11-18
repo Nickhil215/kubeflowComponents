@@ -1,80 +1,52 @@
-# name: Data Loader Component
-# description: Component for loading and splitting data from various sources
-
-# inputs:
-#   - {name: data_source, type: String, description: 'Path or URL to input data'}
-#   - {name: val_size, type: Float, default: '0.2', description: 'Validation set size'}
-#   - {name: required_columns, type: JsonArray, optional: true, description: 'List of required column names'}
-#   - {name: stratify_column, type: String, optional: true, description: 'Column to use for stratified split'}
-#   - {name: output_format, type: String, default: 'csv', description: 'Output format (csv/xlsx/json/parquet)'}
-
-# outputs:
-#   - {name: train_data, type: Dataset, description: 'Training dataset'}
-#   - {name: val_data, type: Dataset, description: 'Validation dataset'}
-#   - {name: metadata, type: JsonObject, description: 'Metadata about the splits'}
-
-# implementation:
-#   container:
-#     image: nikhilv215/data_loader:latest
-#     command: [
-#       "python", "src/data_loader_final.py",
-#       "--data-source", {inputValue: data_source},
-#       "--val-size", {inputValue: val_size},
-#       "--required-columns", {inputValue: required_columns},
-#       "--stratify-column", {inputValue: stratify_column},
-#       "--output-format", {inputValue: output_format},
-#       "--output-paths",
-#       {outputPath: train_data},
-#       {outputPath: val_data},
-#       {outputPath: metadata}
-#     ]
-
-#     fileOutputs:
-#       train_data: /output/train_data
-#       val_data: /output/val_data
-#       metadata: /output/metadata.json
-
-# # metadata:
-# #   annotations:
-# #     author: "Your Name"
-# #     version: "1.0.0"
-# #     description: |
-# #       Data loader component that supports multiple data sources (URL/local) 
-# #       and formats (CSV/Excel/JSON/Parquet). Includes validation and 
-# #       stratified splitting capabilities.
-
-
-name: Data Loader
-description: Splits input data into training and validation sets with configurable validation size
-
+name: DataLoader
+description: Load and split data into train and validation sets
 inputs:
-  - {name: data_input, type: String, description: 'Input CSV file path or direct CSV content'}
-  - {name: val_size, type: Float, default: '0.2', description: 'Validation set size (between 0 and 1)'}
-
+  - name: data_path
+    type: String
+    description: Path to input file
+  - name: output_train
+    type: String
+    description: Path to save training data
+  - name: output_val
+    type: String
+    description: Path to save validation data
+  - name: val_size
+    type: Float
+    default: 0.2
+    description: Validation set size
+  - name: output_format
+    type: String
+    optional: true
+    description: Output format (csv/json/parquet)
 outputs:
-  - {name: train_data, type: String, description: 'Training data in CSV format'}
-  - {name: val_data, type: String, description: 'Validation data in CSV format'}
-  - {name: metadata, type: JsonObject, description: 'Metadata including dataset sizes and file paths'}
-
+  - name: train_data
+    type: String
+    description: Path to training data file
+  - name: val_data
+    type: String
+    description: Path to validation data file
+  - name: metadata
+    type: JsonObject
+    description: Dataset metadata including feature names and split sizes
 implementation:
   container:
-    image: nikhilv215/data_loader:1
-    command: [
-      python3,
-      -m,
-      data_loader,
-      --data-input,
-      {inputPath: data_input},
-      --val-size,
-      {inputValue: val_size},
-      --output-paths,
-      {outputPath: train_data},
-      {outputPath: val_data},
-      {outputPath: metadata}
-    ]
-
-metadata:
-  annotations:
-    author: Your Name
-    framework: Pandas & Scikit-learn
-    version: '1.0.0'
+    image: nikhilv215/data_loader_test:latest
+    command:
+      - python
+      - data_loader.py
+      - --data_path
+      - {inputValue: data_path}
+      - --output_train
+      - {inputValue: output_train}
+      - --output_val
+      - {inputValue: output_val}
+      - --val_size
+      - {inputValue: val_size}
+      - --output_format
+      - {inputValue: output_format}
+      - --output_metadata
+      - {outputPath: metadata}
+    fileOutputs:
+      train_data: {outputPath: output_train}
+      val_data: {outputPath: output_val}
+      metadata: {outputPath: metadata}
