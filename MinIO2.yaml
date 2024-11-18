@@ -1,7 +1,7 @@
 name: Upload to MinIO
 description: Upload to a fixed MinIO bucket with application name and directory
 inputs:
-- {name: Data}  # Input file path or directory
+- {name: Data, type: Directory}  # Input file path or directory
 - {name: MinIO bucket name, type: String}  # MinIO bucket name
 - {name: Application name, type: String}  # Application name to include in the path
 outputs:
@@ -13,32 +13,37 @@ implementation:
         - sh
         - -ex
         - -c
+        args:
         - |
             #!/bin/sh
-            DATA_PATH="$1"
-            BUCKET_NAME="$2"
-            APP_NAME="$3"
-            MINIO_PATH="$4"
+            set -ex  # Enable debugging and exit on errors
+            DATA_PATH="$0"
+            BUCKET_NAME="$1"
+            APP_NAME="$2"
+            MINIO_PATH="$3"
+
+            # Validate inputs
+            if [ ! -d "$DATA_PATH" ]; then
+              echo "Error: The specified input path ($DATA_PATH) does not exist or is not a directory."
+              exit 1
+            fi
 
             # Set up MinIO alias
             mc alias set myminio http://minio-service.kubeflow.svc.cluster.local:9000 minio minio123
 
-            # Check if the bucket exists, if not create it
-            if ! mc ls myminio/"$BUCKET_NAME"; then
+            # Check if the bucket exists; if not, create it
+            if ! mc ls myminio/"$BUCKET_NAME" > /dev/null 2>&1; then
               mc mb myminio/"$BUCKET_NAME"
             fi
 
-            # Copy the contents to MinIO
-            if [ -d "$DATA_PATH" ]; then
-              mc cp --recursive "$DATA_PATH/" "myminio/$BUCKET_NAME/$APP_NAME/1/"
-            else
-              echo "The specified input path does not exist or is not a directory."
-            fi
+            # Upload data to MinIO
+            mc cp --recursive "$DATA_PATH/" "myminio/$BUCKET_NAME/$APP_NAME/1/"
 
-            # Save the MinIO path to the output
+            # Output the resulting MinIO path
             echo "s3://$BUCKET_NAME/$APP_NAME/" > "$MINIO_PATH"
-        args:
+        inputs:
         - {inputPath: Data}
         - {inputValue: MinIO bucket name}
         - {inputValue: Application name}
+        outputs:
         - {outputPath: MinIO path}
