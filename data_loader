@@ -1,52 +1,36 @@
+
 name: DataLoader
-description: Load and split data into train and validation sets
+description: A component to load and split data into train and validation sets
+metadata:
+  annotations:
+    platform: Elyra
+    tags: ['data', 'preprocessing']
 inputs:
-  - name: data_path
-    type: String
-    description: Path to input file
-  - name: output_train
-    type: String
-    description: Path to save training data
-  - name: output_val
-    type: String
-    description: Path to save validation data
-  - name: val_size
-    type: Float
-    default: 0.2
-    description: Validation set size
-  - name: output_format
-    type: String
-    optional: true
-    description: Output format (csv/json/parquet)
+{name: data_path, type: String, description: 'Path to input file'}
+{name: output_train, type: String, description: 'Path to save training data'}
+{name: output_val, type: String, description: 'Path to save validation data'}
+{name: val_size, type: Float, default: '0.2', description: 'Validation set size'}
+{name: output_format, type: String, optional: true, description: 'Output format (csv/json/parquet)'}
 outputs:
-  - name: train_data
-    type: String
-    description: Path to training data file
-  - name: val_data
-    type: String
-    description: Path to validation data file
-  - name: metadata
-    type: JsonObject
-    description: Dataset metadata including feature names and split sizes
+{name: train_data, type: String, description: 'Path to training data file'}
+{name: val_data, type: String, description: 'Path to validation data file'}
+{name: metadata, type: JsonObject, description: 'Dataset metadata including feature names and split sizes'}
 implementation:
   container:
     image: nikhilv215/data_loader_test:latest
-    command:
-      - python
-      - data_loader.py
-      - --data_path
-      - {inputValue: data_path}
-      - --output_train
-      - {inputValue: output_train}
-      - --output_val
-      - {inputValue: output_val}
-      - --val_size
-      - {inputValue: val_size}
-      - --output_format
-      - {inputValue: output_format}
-      - --output_metadata
-      - {outputPath: metadata}
-    fileOutputs:
-      train_data: {outputPath: output_train}
-      val_data: {outputPath: output_val}
-      metadata: {outputPath: metadata}
+    command: [
+      python,
+      /src/dl_f.py,
+      --data_path,
+      {inputPath: data_path},
+      --output_train,
+      {outputPath: output_train},
+      --output_val,
+      {outputPath: output_val},
+      --val_size,
+      {inputValue: val_size},
+      --output_format,
+      {inputValue: output_format},
+      --output_metadata,
+      {outputPath: metadata}
+    ]
