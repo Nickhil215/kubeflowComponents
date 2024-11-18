@@ -11,7 +11,7 @@ metadata:
     author: Nikhil <nikhil.v@mobiusdtaas.ai>
 implementation:
     container:
-        image: ubuntu:22.04.4  # Using Ubuntu base image
+        image: ubuntu:22.04  # Using Ubuntu base image
         command:
         - sh
         - -ex
