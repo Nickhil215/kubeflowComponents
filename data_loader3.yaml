@@ -2,7 +2,7 @@ name: Data Loader Component
 description: Component for loading and splitting data into training and validation sets
 inputs:
   - name: data_source
-    type: CSV
+    type: String
     description: 'Input CSV file path'
     default: ''
   - name: val_size 
