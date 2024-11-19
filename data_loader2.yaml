@@ -4,9 +4,9 @@ inputs:
   - {name: data_source, type: String, description: 'Path to input CSV file', optional: true}
   - {name: val_size, type: Float, default: '0.2', description: 'Validation set size (between 0 and 1)'}
 outputs:
-  - {name: train_data, type: Dataset, description: 'Training dataset',optional: true}
-  - {name: val_data, type: Dataset, description: 'Validation dataset',optional: true}
-  - {name: metadata, type: JsonObject, description: 'Metadata including dataset statistics and features', optional: true}
+  - {name: train_data, type: Dataset, description: 'Training dataset'}
+  - {name: val_data, type: Dataset, description: 'Validation dataset'}
+  - {name: metadata, type: JsonObject, description: 'Metadata including dataset statistics and features'}
 implementation:
   container:
     image: ravidocker189/dt_loader:latest
