@@ -1,7 +1,7 @@
 name: Data Loader Component
 description: Component for loading and splitting data into training and validation sets
 inputs:
-  - {name: data_source, type: Any, description: 'Path to input CSV file', optional: false}
+  - {name: data_source, type: System.String, description: 'Path to input CSV file', optional: false}
   - {name: val_size, type: Float, default: '0.2', description: 'Validation set size (between 0 and 1)', optional: true}
 outputs:
   - {name: train_data, type: Dataset, description: 'Training dataset'}
