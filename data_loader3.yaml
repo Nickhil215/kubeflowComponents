@@ -11,14 +11,14 @@ implementation:
   container:
     image: ravidocker189/dt_loader2
     command: [
-      "python3",
+      "python",
       "src/data_loader2.py",
       "--data-source",
-      {inputPath: data_source},
+      {inputValue: data_source},
       "--val-size",
       {inputValue: val_size},
-      "----output-paths",
-      {outputPath: train_data},
-      {outputPath: val_data},
-      {outputPath: metadata}
+      "--output-paths",
+      {outputUri: train_data},
+      {outputUri: val_data},
+      {outputUri: metadata}
     ]
