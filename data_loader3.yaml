@@ -1,12 +1,12 @@
 name: Data Loader Component
-description: Component for loading and splitting data into training and validation sets
+description: Data splitting component
 inputs:
-  - {name: data_source, type: String, description: 'Path to input CSV file', optional: false}
-  - {name: val_size, type: Float, default: '0.2', description: 'Validation set size (between 0 and 1)', optional: true}
+  - {name: data_source, type: String, description: 'CSV file path'}
+  - {name: val_size, type: Float, default: '0.2', description: 'Validation size'}
 outputs:
-  - {name: train_data, type: String, description: 'Training dataset in CSV format'}
-  - {name: val_data, type: String, description: 'Validation dataset in CSV format'}
-  - {name: metadata, type: String, description: 'Metadata output file path'}
+  - {name: train_data, type: String, description: 'Training data'}
+  - {name: val_data, type: String, description: 'Validation data'}
+  - {name: metadata, type: String, description: 'Metadata'}
 implementation:
   container:
     image: ravidocker189/dt_loader2
