@@ -2,7 +2,7 @@ name: Data Loader
 description: Splits input data into training and validation sets with configurable validation size
 
 inputs:
-  - {name: data_input, type: String, description: 'Input CSV file path or direct CSV content'}
+  - {name: data_input, type: csv, description: 'Input CSV file path or direct CSV content'}
   - {name: val_size, type: Float, default: '0.2', description: 'Validation set size (between 0 and 1)'}
 
 outputs:
