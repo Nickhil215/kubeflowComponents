@@ -1,11 +1,17 @@
 name: Data Loader Component
 description: Component for loading and splitting data into training and validation sets
 inputs:
-  - {name: data_source, type: String, description: 'Path to input CSV file', optional: false}
-  - {name: val_size, type: Float, default: '0.2', description: 'Validation set size (between 0 and 1)', optional: true}
+  - name: data_source
+    type: CSV
+    description: 'Input CSV file path'
+    default: ''
+  - name: val_size 
+    type: Float
+    description: 'Validation set size (between 0 and 1)'
+    default: '0.2'
 outputs:
-  - {name: train_data, type: Dataset, description: 'Training dataset'}
-  - {name: val_data, type: Dataset, description: 'Validation dataset'}
+  - {name: train_data, type: CSV, description: 'Training dataset'}
+  - {name: val_data, type: CSV, description: 'Validation dataset'}
   - {name: metadata, type: JsonObject, description: 'Metadata including dataset statistics and features'}
 implementation:
   container:
