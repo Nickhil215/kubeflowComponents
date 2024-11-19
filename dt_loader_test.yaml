@@ -1,0 +1,21 @@
+name: Data Loader Component
+description: Component for loading and splitting data into training and validation sets
+inputs:
+  - {name: data_source, type: Any, description: 'Path to input CSV file', optional: false}
+  - {name: val_size, type: Float, default: '0.2', description: 'Validation set size (between 0 and 1)', optional: true}
+outputs:
+  - {name: train_data, type: Dataset, description: 'Training dataset'}
+  - {name: val_data, type: Dataset, description: 'Validation dataset'}
+  - {name: metadata, type: String, description: 'Metadata including dataset statistics and features'}
+implementation:
+  container:
+    image: ravidocker189/test_data_loader:1
+    command: ["python"]
+    args: [
+      -u, dl_f.py,
+      "--data-source", {inputValue: data_source},
+      "--val-size", {inputValue: val_size},
+      "--output-paths", {outputPath: train_data},
+      {outputPath: val_data},
+      {outputPath: metadata}
+    ]
