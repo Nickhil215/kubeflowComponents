@@ -23,6 +23,6 @@ implementation:
       {outputPath: metadata}
     ]
     fileOutputs:
-      train_data: /output/train_data.csv
-      val_data: /output/val_data.csv
-      metadata: /output/metadata.json
+      train_data: /tmp/outputs/train_data/data
+      val_data: /tmp/outputs/val_data/data
+      metadata: /tmp/outputs/metadata/data
