@@ -1,28 +1,24 @@
 name: Data Loader Component
 description: Component for loading and splitting data into training and validation sets
 inputs:
-  - {name: data_source, type: String, description: 'Path to input CSV file', optional: true}
-  - {name: val_size, type: Float, default: '0.2', description: 'Validation set size (between 0 and 1)'}
+  - {name: data_source, type: String, description: 'Path to input CSV file', optional: false}
+  - {name: val_size, type: Float, default: '0.2', description: 'Validation set size (between 0 and 1)', optional: true}
 outputs:
   - {name: train_data, type: Dataset, description: 'Training dataset'}
   - {name: val_data, type: Dataset, description: 'Validation dataset'}
   - {name: metadata, type: JsonObject, description: 'Metadata including dataset statistics and features'}
 implementation:
   container:
-    image: ravidocker189/dt_loader:latest
+    image: ravidocker189/dt_loader2
     command: [
-      "python",
-      "dl_f.py",
+      "python3",
+      "data_loader2.py",
       "--data-source",
-      {inputValue: data_source},
+      {inputPath: data_source},
       "--val-size",
       {inputValue: val_size},
-      "--output-paths",
+      "----output-paths",
       {outputPath: train_data},
       {outputPath: val_data},
       {outputPath: metadata}
     ]
-    fileOutputs:
-      train_data: /tmp/outputs/train_data/data
-      val_data: /tmp/outputs/val_data/data
-      metadata: /tmp/outputs/metadata/data
