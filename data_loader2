@@ -1,32 +1,20 @@
-name: Data Loader
-description: Splits input data into training and validation sets with configurable validation size
+name: Data Loader Component
+description: Component for loading and splitting data into training and validation sets
 inputs:
-  - name: data_source
-    type: CSV
-    description: 'Input CSV file path containing the dataset to be split'
-  - name: val_size
-    type: Float
-    default: '0.2'
-    description: 'Validation set size as a fraction between 0 and 1'
+  - {name: data_source, type: String, description: 'Path to input CSV file'}
+  - {name: val_size, type: Float, default: '0.2', description: 'Validation set size'}
 outputs:
-  - name: train_data
-    type: String
-    description: 'Training dataset in CSV format'
-  - name: val_data
-    type: String
-    description: 'Validation dataset in CSV format'
-  - name: metadata
-    type: JsonObject
-    description: 'Metadata containing dataset statistics, features, and shape information'
+  - {name: train_data, type: Dataset, description: 'Training dataset'}
+  - {name: val_data, type: Dataset, description: 'Validation dataset'}
+  - {name: metadata, type: JsonObject, description: 'Metadata including dataset statistics and features'}
 implementation:
   container:
-    image: nikhilv215/data_loader:1
+    image: ravidocker189/dt_loader:latest
     command: [
-      "python3",
-      "-m",
-      "data_loader",
+      "python",
+      "dl_f.py",
       "--data-source",
-      {inputPath: data_source},
+      {inputValue: data_source},
       "--val-size",
       {inputValue: val_size},
       "--output-paths",
@@ -34,8 +22,7 @@ implementation:
       {outputPath: val_data},
       {outputPath: metadata}
     ]
-metadata:
-  annotations:
-    author: Your Name
-    framework: Pandas & Scikit-learn
-    version: '1.0.0'
+    fileOutputs:
+      train_data: /output/train_data.csv
+      val_data: /output/val_data.csv
+      metadata: /output/metadata.json
