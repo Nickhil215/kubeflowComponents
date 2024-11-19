@@ -12,7 +12,7 @@ implementation:
     image: ravidocker189/dt_loader2
     command: [
       "python",
-      "src/data_loader2.py",
+      "src/dl_f.py",
       "--data-source",
       {inputValue: data_source},
       "--val-size",
