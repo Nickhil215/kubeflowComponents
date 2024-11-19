@@ -1,37 +1,23 @@
-
-
-name: DataLoader
-description: A component to load and split data into train and validation sets
-metadata:
-  annotations:
-    platform: Elyra
-    tags: ['data', 'preprocessing']
+name: Data Loader Component
+description: Load and split datasets from files or URLs
 inputs:
-{name: data_path, type: String, description: 'Path to input file'}
-{name: output_train, type: String, description: 'Path to save training data'}
-{name: output_val, type: String, description: 'Path to save validation data'}
-{name: val_size, type: Float, default: '0.2', description: 'Validation set size'}
-{name: output_format, type: String, optional: true, description: 'Output format (csv/json/parquet)'}
+  - {name: data_path, type: String, optional: true, description: 'Path to input file'}
+  - {name: data_url, type: String, optional: true, description: 'URL to input file'}
+  - {name: val_size, type: Number, default: 0.2, description: 'Validation split size'}
+  - {name: output_format, type: String, default: 'csv', description: 'Output format (csv/json/parquet)'}
 outputs:
-{name: train_data, type: String, description: 'Path to training data file'}
-{name: val_data, type: String, description: 'Path to validation data file'}
-{name: metadata, type: JsonObject, description: 'Dataset metadata including feature names and split sizes'}
+  - {name: train_data, type: String}
+  - {name: val_data, type: String}
+  - {name: metadata, type: String}
 implementation:
   container:
-    image: nikhilv215/data_loader:new
-    command: [
-      python,
-       src/dl_f.py,
-      --data_path,
-      {inputPath: data_path},
-      --output_train,
-      {outputPath: output_train},
-      --output_val,
-      {outputPath: output_val},
-      --val_size,
-      {inputValue: val_size},
-      --output_format,
-      {inputValue: output_format},
-      --output_metadata,
-      {outputPath: metadata}
+    image: nikhilv215/data_loader:latest
+    command: [python]
+    args: [
+      'dl_f.py',
+      '--_output_paths', {outputPath: train_data}, {outputPath: val_data}, {outputPath: metadata},
+      '?--data-path', {inputValue: data_path},
+      '?--data-url', {inputValue: data_url},
+      '--val-size', {inputValue: val_size},
+      '--output-format', {inputValue: output_format}
     ]
