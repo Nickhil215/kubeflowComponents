@@ -16,7 +16,7 @@ implementation:
     command: [
       python3,
       -m,
-      data_loader,
+      dl_f.py,
       --data-input,
       {inputPath: data_input},
       --val-size,
