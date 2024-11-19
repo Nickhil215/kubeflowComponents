@@ -2,7 +2,7 @@ name: Data Loader Component
 description: Component for loading and splitting data from various sources
 
 inputs:
-  - {name: data_source, type: String, description: 'Path or URL to input data'}
+  - {name: data_source }
   - {name: val_size, type: Float, default: '0.2', description: 'Validation set size'}
   - {name: required_columns, type: JsonArray, optional: true, description: 'List of required column names'}
   - {name: stratify_column, type: String, optional: true, description: 'Column to use for stratified split'}
