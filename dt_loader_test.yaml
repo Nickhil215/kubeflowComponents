@@ -13,7 +13,7 @@ implementation:
     command: ["python"]
     args: [
       -u, dl_f.py,
-      "--data-source", {inputValue: data_source},
+      "--data-source", {inputPath: data_source},
       "--val-size", {inputValue: val_size},
       "--output-paths", {outputPath: train_data},
       {outputPath: val_data},
