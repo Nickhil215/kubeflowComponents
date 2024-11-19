@@ -9,10 +9,10 @@ outputs:
   - {name: metadata, type: JsonObject, description: 'Metadata including dataset statistics and features'}
 implementation:
   container:
-    image: ravidocker189/data_loader3
+    image: ravidocker189/data_loader4
     command: [
       "python",
-      "src/dl_f.py",
+      "./src/dl_f.py",
       "--data-source",
       {inputValue: data_source},
       "--val-size",
