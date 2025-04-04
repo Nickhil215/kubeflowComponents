@@ -1,6 +1,11 @@
-# kubeflowComponents
-------
-KSERVE AVAILABLE_FRAMEWORKS = {
+# Kubeflow Components
+
+## KSERVE Available Frameworks  
+
+The following machine learning frameworks are supported in KSERVE:  
+
+```python
+AVAILABLE_FRAMEWORKS = {
     'tensorflow': V1beta1TFServingSpec,
     'pytorch': V1beta1TorchServeSpec,
     'sklearn': V1beta1SKLearnSpec,
