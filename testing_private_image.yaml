@@ -17,7 +17,7 @@ outputs:
 implementation:
 container:
 image: ravidocker189/taggingnew:10
-command: ["python3"]
+command: ["python"]
 args: [
 -u, autotaggernew.py,
 "--train-data", {inputfile: train_data},
