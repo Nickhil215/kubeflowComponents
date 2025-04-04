@@ -1,38 +1,35 @@
-name: Dynamic Data Categorizer Component
-description: Component for dynamic text categorization with training and prediction capabilities
+name: Multi-Label Text Classifier Component
+description: TensorFlow-based multi-label text classifier for document classification
 inputs:
-  - {name: mode, type: String, description: "Operation mode - 'train' or 'predict'"}
-  - {name: input_file, type: String, description: "Path to input CSV file"}
-  - {name: text_column, type: String, default: "text", description: "Column name containing text data"}
-  - {name: category_column, type: String, default: "category", description: "Column name containing category labels"}
-  - {name: model_file, type: Directory, optional: true, description: "Directory containing model files"}
-  - {name: config_file, type: Directory, optional: true, description: "Directory containing model configuration"}
-
+ - {name: train_data, type: Dataset, description: 'Training data CSV file containing text and labels'}
+ - {name: val_data, type: Dataset, description: 'Validation data CSV file containing text and labels'}
+ - {name: text_column, type: String, default: 'text', description: 'Name of text column in data', optional: true}
+ - {name: label_column, type: String, default: 'labels', description: 'Name of labels column in data', optional: true}
+ - {name: max_features, type: Integer, default: '20000', description: 'Maximum vocabulary size', optional: true}
+ - {name: max_len, type: Integer, default: '128', description: 'Maximum sequence length', optional: true}
+ - {name: embedding_dim, type: Integer, default: '200', description: 'Embedding dimension size', optional: true}
+ - {name: dropout, type: Float, default: '0.5', description: 'Dropout rate for regularization', optional: true}
+ - {name: learning_rate, type: Float, default: '0.0001', description: 'Learning rate for optimizer', optional: true}
+ - {name: batch_size, type: Integer, default: '32', description: 'Training batch size', optional: true}
+ - {name: epochs, type: Integer, default: '10', description: 'Number of training epochs', optional: true}
 outputs:
-  - {name: output_file, type: String, description: "Path for output predictions"}
-  - {name: saved_model, type: Directory, description: "Directory to save trained model", optional: true}
-
+ - {name: model_output, type: Dataset, description: 'Directory containing saved model and metadata'}
 implementation:
-  container:
-    image: nikhilv215/testingprivate:latest
-    command: ["python"]
-    args: [
-      -u, categorizer.py,
-      "--mode", {inputValue: mode},
-      "--input-file", {inputValue: input_file},
-      "--text-column", {inputValue: text_column},
-      "--category-column", {inputValue: category_column},
-      "--model-file", {inputPath: model_file},
-      "--config-file", {inputPath: config_file},
-      "--output-file", {outputPath: output_file}
-    ]
-
-resources:
-  cpu: 2
-  memory: "8Gi"
-  gpu: 1
-
-metadata:
-  annotations:
-    pytorch.version: "2.0"
-    transformers.version: "4.30.0"
+container:
+image: nikhilv215/autotaggernew:latest
+command: ["python"]
+args: [
+-u, autotaggernew.py,
+"--train-data", {inputPath: train_data},
+"--val-data", {inputPath: val_data},
+"--text-column", {inputValue: text_column},
+"--label-column", {inputValue: label_column},
+"--max-features", {inputValue: max_features},
+"--max-len", {inputValue: max_len},
+"--embedding-dim", {inputValue: embedding_dim},
+"--dropout", {inputValue: dropout},
+"--learning-rate", {inputValue: learning_rate},
+"--batch-size", {inputValue: batch_size},
+"--epochs", {inputValue: epochs},
+"--model-output", {outputPath: model_output}
+]
