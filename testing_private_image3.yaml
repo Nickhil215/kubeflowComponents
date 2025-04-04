@@ -20,8 +20,8 @@ image: ravidocker189/taggingnew:10
 command: ["python"]
 args: [
 -u, autotaggernew.py,
-"--train-data", {inputPath: train_data},
-"--val-data", {inputPath: val_data},
+"--train-data", {inputValue: train_data},
+"--val-data", {inputValue: val_data},
 "--text-column", {inputValue: text_column},
 "--label-column", {inputValue: label_column},
 "--max-features", {inputValue: max_features},
