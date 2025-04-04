@@ -1,0 +1,38 @@
+name: Dynamic Data Categorizer Component
+description: Component for dynamic text categorization with training and prediction capabilities
+inputs:
+  - {name: mode, type: String, description: "Operation mode - 'train' or 'predict'"}
+  - {name: input_file, type: String, description: "Path to input CSV file"}
+  - {name: text_column, type: String, default: "text", description: "Column name containing text data"}
+  - {name: category_column, type: String, default: "category", description: "Column name containing category labels"}
+  - {name: model_file, type: Directory, optional: true, description: "Directory containing model files"}
+  - {name: config_file, type: Directory, optional: true, description: "Directory containing model configuration"}
+
+outputs:
+  - {name: output_file, type: String, description: "Path for output predictions"}
+  - {name: saved_model, type: Directory, description: "Directory to save trained model", optional: true}
+
+implementation:
+  container:
+    image: nikhilv215/testingprivate:latest
+    command: ["python"]
+    args: [
+      -u, categorizer.py,
+      "--mode", {inputValue: mode},
+      "--input-file", {inputValue: input_file},
+      "--text-column", {inputValue: text_column},
+      "--category-column", {inputValue: category_column},
+      "--model-file", {inputPath: model_file},
+      "--config-file", {inputPath: config_file},
+      "--output-file", {outputPath: output_file}
+    ]
+
+resources:
+  cpu: 2
+  memory: "8Gi"
+  gpu: 1
+
+metadata:
+  annotations:
+    pytorch.version: "2.0"
+    transformers.version: "4.30.0"
