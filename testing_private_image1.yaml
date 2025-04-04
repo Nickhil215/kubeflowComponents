@@ -1,19 +1,19 @@
 name: Multi-Label Text Classifier Component
 description: TensorFlow-based multi-label text classifier for document classification
 inputs:
- - {name: train_data, type: Dataset, description: 'Training data CSV file containing text and labels'}
- - {name: val_data, type: Dataset, description: 'Validation data CSV file containing text and labels'}
- - {name: text_column, type: String, default: 'text', description: 'Name of text column in data'}
- - {name: label_column, type: String, default: 'labels', description: 'Name of labels column in data'}
- - {name: max_features, type: Integer, default: '20000', description: 'Maximum vocabulary size'}
- - {name: max_len, type: Integer, default: '128', description: 'Maximum sequence length'}
- - {name: embedding_dim, type: Integer, default: '200', description: 'Embedding dimension size'}
- - {name: dropout, type: Float, default: '0.5', description: 'Dropout rate for regularization'}
- - {name: learning_rate, type: Float, default: '0.0001', description: 'Learning rate for optimizer'}
- - {name: batch_size, type: Integer, default: '32', description: 'Training batch size'}
- - {name: epochs, type: Integer, default: '10', description: 'Number of training epochs'}
+ - {name: train_data, type: Dataset}
+ - {name: val_data, type: Dataset}
+ - {name: text_column, type: String}
+ - {name: label_column, type: String}
+ - {name: max_features, type: Integer}
+ - {name: max_len, type: Integer}
+ - {name: embedding_dim, type: Integer}
+ - {name: dropout, type: Float}
+ - {name: learning_rate, type: Float}
+ - {name: batch_size, type: Integer}
+ - {name: epochs, type: Integer}
 outputs:
- - {name: model_output, type: Dataset, description: 'Directory containing saved model and metadata'}
+ - {name: model_output, type: Dataset}
 implementation:
 container:
 image: ravidocker189/taggingnew:10
