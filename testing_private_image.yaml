@@ -3,25 +3,25 @@ description: TensorFlow-based multi-label text classifier for document classific
 inputs:
  - {name: train_data, type: Dataset, description: 'Training data CSV file containing text and labels'}
  - {name: val_data, type: Dataset, description: 'Validation data CSV file containing text and labels'}
- - {name: text_column, type: String, default: 'text', description: 'Name of text column in data', optional: true}
- - {name: label_column, type: String, default: 'labels', description: 'Name of labels column in data', optional: true}
- - {name: max_features, type: Integer, default: '20000', description: 'Maximum vocabulary size', optional: true}
- - {name: max_len, type: Integer, default: '128', description: 'Maximum sequence length', optional: true}
- - {name: embedding_dim, type: Integer, default: '200', description: 'Embedding dimension size', optional: true}
- - {name: dropout, type: Float, default: '0.5', description: 'Dropout rate for regularization', optional: true}
- - {name: learning_rate, type: Float, default: '0.0001', description: 'Learning rate for optimizer', optional: true}
- - {name: batch_size, type: Integer, default: '32', description: 'Training batch size', optional: true}
- - {name: epochs, type: Integer, default: '10', description: 'Number of training epochs', optional: true}
+ - {name: text_column, type: String, default: 'text', description: 'Name of text column in data'}
+ - {name: label_column, type: String, default: 'labels', description: 'Name of labels column in data'}
+ - {name: max_features, type: Integer, default: '20000', description: 'Maximum vocabulary size'}
+ - {name: max_len, type: Integer, default: '128', description: 'Maximum sequence length'}
+ - {name: embedding_dim, type: Integer, default: '200', description: 'Embedding dimension size'}
+ - {name: dropout, type: Float, default: '0.5', description: 'Dropout rate for regularization'}
+ - {name: learning_rate, type: Float, default: '0.0001', description: 'Learning rate for optimizer'}
+ - {name: batch_size, type: Integer, default: '32', description: 'Training batch size'}
+ - {name: epochs, type: Integer, default: '10', description: 'Number of training epochs'}
 outputs:
  - {name: model_output, type: Dataset, description: 'Directory containing saved model and metadata'}
 implementation:
 container:
 image: ravidocker189/taggingnew:10
-command: ["python"]
+command: ["python3"]
 args: [
 -u, autotaggernew.py,
-"--train-data", {inputPath: train_data},
-"--val-data", {inputPath: val_data},
+"--train-data", {inputfile: train_data},
+"--val-data", {inputfile: val_data},
 "--text-column", {inputValue: text_column},
 "--label-column", {inputValue: label_column},
 "--max-features", {inputValue: max_features},
