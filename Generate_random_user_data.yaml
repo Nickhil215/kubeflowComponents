@@ -1,0 +1,61 @@
+name: Generate random user data
+description: Generates synthetic user data with fields age, income, gender, and owns_car.
+inputs:
+- {name: num_instances, type: Integer}
+outputs:
+- {name: json_data,type: Data}
+metadata:
+  annotations:
+    author: Your Name <your.email@example.com>
+    canonical_location: 'https://your-repo-or-url.com/generate_user_data/component.yaml'
+implementation:
+  container:
+    image: python:3.8
+    command:
+    - python3
+    - -u
+    - -c
+    - |
+      import random
+      import json
+      import argparse
+      import os
+
+      def generate_data(num_instances):
+          data = []
+          for _ in range(num_instances):
+              instance = {
+                  "age": random.randint(18, 65),
+                  "income": random.randint(30000, 120000),
+                  "gender": random.choice(["male", "female"]),
+                  "owns_car": random.choice([True, False])
+              }
+              data.append(instance)
+          return data
+
+      def _serialize_json(obj):
+          if isinstance(obj, str):
+              return obj
+          return json.dumps(obj, sort_keys=True)
+
+      _parser = argparse.ArgumentParser(prog='Generate random user data')
+      _parser.add_argument("--num-instances", dest="num_instances", type=int, required=True)
+      _parser.add_argument("----output-paths", dest="_output_paths", type=str, nargs=1)
+      _parsed_args = vars(_parser.parse_args())
+      _output_files = _parsed_args.pop("_output_paths", [])
+
+      _outputs = generate_data(**_parsed_args)
+      _outputs = [_outputs]
+
+      for idx, output_file in enumerate(_output_files):
+          try:
+              os.makedirs(os.path.dirname(output_file))
+          except OSError:
+              pass
+          with open(output_file, "w") as f:
+              f.write(_serialize_json(_outputs[idx]))
+    args:
+    - --num-instances
+    - {inputValue: num_instances}
+    - '----output-paths'
+    - {outputPath: json_data}
