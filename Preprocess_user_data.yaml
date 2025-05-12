@@ -1,10 +1,12 @@
 name: Preprocess user data
-description: Loads JSON user data, encodes categorical fields, and splits into training sets.
+description: Loads JSON user data, encodes categorical fields, and splits into training and test sets.
 inputs:
   - {name: json_data, type: Json}
 outputs:
   - {name: X_train, type: JsonArray}
   - {name: y_train, type: JsonArray}
+  - {name: X_test, type: JsonArray}
+  - {name: y_test, type: JsonArray}
 implementation:
   container:
     image: python:3.8
@@ -24,27 +26,39 @@ implementation:
           df = pd.get_dummies(df, columns=['gender'], drop_first=True)
           X = df.drop('owns_car', axis=1)
           y = df['owns_car']
-          X_train, _, y_train, _ = train_test_split(X, y, test_size=0.2, random_state=42)
-          return X_train.to_dict(orient='records'), y_train.tolist()
+          X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+          return (
+              X_train.to_dict(orient='records'),
+              y_train.tolist(),
+              X_test.to_dict(orient='records'),
+              y_test.tolist()
+          )
 
       parser = argparse.ArgumentParser()
       parser.add_argument("--json_data", type=str, required=True)
       parser.add_argument("--X_train", type=str)
       parser.add_argument("--y_train", type=str)
+      parser.add_argument("--X_test", type=str)
+      parser.add_argument("--y_test", type=str)
       args = parser.parse_args()
 
       with open(args.json_data, "r") as f:
           json_data = json.load(f)
 
-      X_train, y_train = preprocess_data(json_data)
+      X_train, y_train, X_test, y_test = preprocess_data(json_data)
 
       os.makedirs(os.path.dirname(args.X_train), exist_ok=True)
       with open(args.X_train, "w") as f:
           json.dump(X_train, f)
 
-      os.makedirs(os.path.dirname(args.y_train), exist_ok=True)
       with open(args.y_train, "w") as f:
           json.dump(y_train, f)
+
+      with open(args.X_test, "w") as f:
+          json.dump(X_test, f)
+
+      with open(args.y_test, "w") as f:
+          json.dump(y_test, f)
     args:
     - --json_data
     - {inputPath: json_data}
@@ -52,3 +66,7 @@ implementation:
     - {outputPath: X_train}
     - --y_train
     - {outputPath: y_train}
+    - --X_test
+    - {outputPath: X_test}
+    - --y_test
+    - {outputPath: y_test}
