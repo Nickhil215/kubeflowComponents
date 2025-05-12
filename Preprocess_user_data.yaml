@@ -13,7 +13,9 @@ implementation:
     command:
     - sh
     - -c
-    - (PIP_DISABLE_PIP_VERSION_CHECK=1 python3 -m pip install --quiet --no-warn-script-location 'pandas==2.2.2' 'scikit-learn' || PIP_DISABLE_PIP_VERSION_CHECK=1 python3 -m pip install --quiet --no-warn-script-location 'pandas==2.2.2' 'scikit-learn' --user) && "$0" "$@"
+    - |
+      PIP_DISABLE_PIP_VERSION_CHECK=1 python3 -m pip install --quiet --no-warn-script-location 'pandas==2.2.2' 'scikit-learn' || PIP_DISABLE_PIP_VERSION_CHECK=1 python3 -m pip install --quiet --no-warn-script-location 'pandas==2.2.2' 'scikit-learn' --user
+      exec "$0" "$@"
     - python3
     - -u
     - -c
@@ -50,7 +52,13 @@ implementation:
 
       X_train, y_train, X_test, y_test = preprocess_data(json_data)
 
+      # Ensure the directories for all output paths exist
       os.makedirs(os.path.dirname(args.X_train), exist_ok=True)
+      os.makedirs(os.path.dirname(args.y_train), exist_ok=True)
+      os.makedirs(os.path.dirname(args.X_test), exist_ok=True)
+      os.makedirs(os.path.dirname(args.y_test), exist_ok=True)
+
+      # Now you can safely write the files
       with open(args.X_train, "w") as f:
           json.dump(X_train, f)
 
