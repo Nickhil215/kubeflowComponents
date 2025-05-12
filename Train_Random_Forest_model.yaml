@@ -1,0 +1,49 @@
+name: Train Random Forest model
+description: Trains a Random Forest classifier using preprocessed training data.
+inputs:
+  - {name: X_train, type: JsonArray}
+  - {name: y_train, type: JsonArray}
+outputs:
+  - {name: model, type: Model}
+implementation:
+  container:
+    image: python:3.8
+    command:
+      - python3
+      - -u
+      - -c
+      - |
+        import argparse
+        import json
+        import os
+        import joblib
+        import pandas as pd
+        from sklearn.ensemble import RandomForestClassifier
+
+        parser = argparse.ArgumentParser()
+        parser.add_argument("--X_train", type=str, required=True)
+        parser.add_argument("--y_train", type=str, required=True)
+        parser.add_argument("--model", type=str, required=True)
+        args = parser.parse_args()
+
+        # Load training data
+        with open(args.X_train, "r") as f:
+            X_train = pd.DataFrame(json.load(f))
+
+        with open(args.y_train, "r") as f:
+            y_train = json.load(f)
+
+        # Train model
+        model = RandomForestClassifier(random_state=42)
+        model.fit(X_train, y_train)
+
+        # Save model
+        os.makedirs(os.path.dirname(args.model), exist_ok=True)
+        joblib.dump(model, args.model)
+    args:
+      - --X_train
+      - {inputPath: X_train}
+      - --y_train
+      - {inputPath: y_train}
+      - --model
+      - {outputPath: model}
