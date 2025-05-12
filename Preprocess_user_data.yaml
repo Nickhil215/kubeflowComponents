@@ -1,7 +1,7 @@
 name: Preprocess user data
 description: Loads JSON user data, encodes categorical fields, and splits into training sets.
 inputs:
-  - {name: json_data,type: Data}
+  - {name: json_data, type: Json}
 outputs:
   - {name: X_train, type: JsonArray}
   - {name: y_train, type: JsonArray}
@@ -9,43 +9,46 @@ implementation:
   container:
     image: python:3.8
     command:
-      - python3
-      - -u
-      - -c
-      - |
-        import pandas as pd
-        import json
-        from sklearn.model_selection import train_test_split
+    - python3
+    - -u
+    - -c
+    - |
+      import pandas as pd
+      import json
+      import argparse
+      import os
+      from sklearn.model_selection import train_test_split
 
-        def preprocess_data(json_data):
-            df = pd.DataFrame(json_data)
-            df = pd.get_dummies(df, columns=['gender'], drop_first=True)
-            X = df.drop('owns_car', axis=1)
-            y = df['owns_car']
-            X_train, _, y_train, _ = train_test_split(X, y, test_size=0.2, random_state=42)
-            return X_train.to_dict(orient='records'), y_train.tolist()
+      def preprocess_data(data):
+          df = pd.DataFrame(data)
+          df = pd.get_dummies(df, columns=['gender'], drop_first=True)
+          X = df.drop('owns_car', axis=1)
+          y = df['owns_car']
+          X_train, _, y_train, _ = train_test_split(X, y, test_size=0.2, random_state=42)
+          return X_train.to_dict(orient='records'), y_train.tolist()
 
-        def _serialize_json(obj) -> str:
-            if isinstance(obj, str):
-                return obj
-            return json.dumps(obj, sort_keys=True)
+      parser = argparse.ArgumentParser()
+      parser.add_argument("--json_data", type=str, required=True)
+      parser.add_argument("--X_train", type=str)
+      parser.add_argument("--y_train", type=str)
+      args = parser.parse_args()
 
-        import argparse
-        _parser = argparse.ArgumentParser()
-        _parser.add_argument("--json_data", type=json.loads, required=True)
-        _parser.add_argument("--X_train", type=str)
-        _parser.add_argument("--y_train", type=str)
-        _parser.add_argument("----output-paths", dest="_output_paths", type=str, nargs=2)
-        _args = _parser.parse_args()
-        _outputs = preprocess_data(_args.json_data)
+      with open(args.json_data, "r") as f:
+          json_data = json.load(f)
 
-        with open(_args._output_paths[0], 'w') as f:
-            f.write(_serialize_json(_outputs[0]))
-        with open(_args._output_paths[1], 'w') as f:
-            f.write(_serialize_json(_outputs[1]))
+      X_train, y_train = preprocess_data(json_data)
+
+      os.makedirs(os.path.dirname(args.X_train), exist_ok=True)
+      with open(args.X_train, "w") as f:
+          json.dump(X_train, f)
+
+      os.makedirs(os.path.dirname(args.y_train), exist_ok=True)
+      with open(args.y_train, "w") as f:
+          json.dump(y_train, f)
     args:
-      - --json_data
-      - {inputValue: json_data}
-      - '----output-paths'
-      - {outputPath: X_train}
-      - {outputPath: y_train}
+    - --json_data
+    - {inputPath: json_data}
+    - --X_train
+    - {outputPath: X_train}
+    - --y_train
+    - {outputPath: y_train}
