@@ -9,8 +9,13 @@ outputs:
   - {name: y_test, type: JsonArray}
 implementation:
   container:
-    image: python:3.8
+    image: python:3.9
     command:
+    - sh
+    - -c
+    - (PIP_DISABLE_PIP_VERSION_CHECK=1 python3 -m pip install --quiet --no-warn-script-location
+      'pandas==2.2.2' || PIP_DISABLE_PIP_VERSION_CHECK=1 python3 -m pip install --quiet
+      --no-warn-script-location 'pandas==2.2.2' --user) && "$0" "$@"
     - python3
     - -u
     - -c
