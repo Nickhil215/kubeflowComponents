@@ -3,11 +3,7 @@ description: Generates synthetic user data with fields age, income, gender, and 
 inputs:
 - {name: num_instances, type: Integer}
 outputs:
-- {name: json_data,type: Data}
-metadata:
-  annotations:
-    author: Your Name <your.email@example.com>
-    canonical_location: 'https://your-repo-or-url.com/generate_user_data/component.yaml'
+- {name: json_data}  # 🛠️ Output must be named json_data to match next step
 implementation:
   container:
     image: python:3.8
@@ -34,28 +30,20 @@ implementation:
           return data
 
       def _serialize_json(obj):
-          if isinstance(obj, str):
-              return obj
           return json.dumps(obj, sort_keys=True)
 
-      _parser = argparse.ArgumentParser(prog='Generate random user data')
-      _parser.add_argument("--num-instances", dest="num_instances", type=int, required=True)
-      _parser.add_argument("----output-paths", dest="_output_paths", type=str, nargs=1)
-      _parsed_args = vars(_parser.parse_args())
-      _output_files = _parsed_args.pop("_output_paths", [])
+      parser = argparse.ArgumentParser()
+      parser.add_argument("--num_instances", type=int, required=True)
+      parser.add_argument("--json_data", type=str)
+      args = parser.parse_args()
 
-      _outputs = generate_data(**_parsed_args)
-      _outputs = [_outputs]
+      output_data = generate_data(args.num_instances)
 
-      for idx, output_file in enumerate(_output_files):
-          try:
-              os.makedirs(os.path.dirname(output_file))
-          except OSError:
-              pass
-          with open(output_file, "w") as f:
-              f.write(_serialize_json(_outputs[idx]))
+      os.makedirs(os.path.dirname(args.json_data), exist_ok=True)
+      with open(args.json_data, "w") as f:
+          f.write(_serialize_json(output_data))
     args:
-    - --num-instances
+    - --num_instances
     - {inputValue: num_instances}
-    - '----output-paths'
+    - --json_data
     - {outputPath: json_data}
