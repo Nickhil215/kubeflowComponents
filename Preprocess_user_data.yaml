@@ -1,7 +1,7 @@
 name: Preprocess user data
 description: Loads JSON user data, encodes categorical fields, and splits into training sets.
 inputs:
-  - {name: json_data, type: JsonArray}
+  - {name: json_data}
 outputs:
   - {name: X_train, type: JsonArray}
   - {name: y_train, type: JsonArray}
