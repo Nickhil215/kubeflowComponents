@@ -3,7 +3,7 @@ description: Generates synthetic user data with fields age, income, gender, and 
 inputs:
 - {name: num_instances, type: Integer}
 outputs:
-- {name: json_data}
+- {name: json_data,type: Data}
 metadata:
   annotations:
     author: Your Name <your.email@example.com>
