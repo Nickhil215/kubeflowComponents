@@ -7,7 +7,7 @@ outputs:
   - {name: model, type: Model}
 implementation:
   container:
-    image: python:3.8
+    image: python:3.9
     command:
       - sh
       - -c
