@@ -11,12 +11,19 @@ implementation:
   container:
     image: python:3.9
     command:
+      - sh
+      - -c
+      - |
+        PIP_DISABLE_PIP_VERSION_CHECK=1 python3 -m pip install --quiet --no-warn-script-location pandas scikit-learn joblib || \
+        PIP_DISABLE_PIP_VERSION_CHECK=1 python3 -m pip install --quiet --no-warn-script-location pandas scikit-learn joblib --user
+        exec "$0" "$@"
       - python3
       - -u
       - -c
       - |
         import argparse
         import json
+        import os
         import joblib
         import pandas as pd
         from sklearn.metrics import accuracy_score
@@ -39,6 +46,10 @@ implementation:
         # Evaluate
         y_pred = model.predict(X_test)
         accuracy = accuracy_score(y_test, y_pred)
+
+        # Ensure output directory exists
+        os.makedirs(os.path.dirname(args.predictions), exist_ok=True)
+        os.makedirs(os.path.dirname(args.accuracy), exist_ok=True)
 
         # Output predictions and accuracy
         with open(args.predictions, "w") as f:
