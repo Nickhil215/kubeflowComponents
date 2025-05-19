@@ -2,63 +2,87 @@ name: Fetch CPU Metric Data
 description: Fetches paginated metric data from a REST API using user-defined configuration for URL, payload, and authorization.
 
 inputs:
-  url_base:
-    type: string
-    description: Base URL of the API endpoint (excluding pagination params)
-  payload:
-    type: object
-    description: JSON payload to be sent in the POST request body
-  auth_token:
-    type: string
-    description: Bearer token for Authorization header
+- {name: url_base, type: string}
+- {name: payload, type: object}
+- {name: auth_token, type: string}
 
-script: |
-  import requests
-  import json
+outputs:
+- {name: json_data}
 
-  url_base = inputs['url_base']
-  payload = inputs['payload']
-  auth_token = inputs['auth_token']
+implementation:
+  container:
+    image: python:3.8
+    command:
+    - python3
+    - -u
+    - -c
+    - |
+      import requests
+      import json
+      import argparse
+      import os
 
-  headers = {
-      "accept": "application/json",
-      "Content-Type": "application/json",
-      "Authorization": f"Bearer {auth_token}"
-  }
+      parser = argparse.ArgumentParser()
+      parser.add_argument("--url_base", type=str, required=True)
+      parser.add_argument("--payload", type=str, required=True)
+      parser.add_argument("--auth_token", type=str, required=True)
+      parser.add_argument("--json_data", type=str, required=True)
+      args = parser.parse_args()
 
-  all_data = []
-  page = 0
+      url_base = args.url_base
+      payload = json.loads(args.payload)  # payload passed as JSON string
+      auth_token = args.auth_token
 
-  while True:
-      print(f"Fetching page {page}...")
-      response = requests.post(
-          f"{url_base}?page={page}&size=2000",
-          headers=headers,
-          json=payload
-      )
+      headers = {
+          "accept": "application/json",
+          "Content-Type": "application/json",
+          "Authorization": f"Bearer {auth_token}"
+      }
 
-      if response.status_code != 200:
-          print(f"Failed to fetch page {page}. Status: {response.status_code}")
-          break
+      all_data = []
+      page = 0
 
-      page_data = response.json()
+      while True:
+          print(f"Fetching page {page}...")
+          response = requests.post(
+              f"{url_base}?page={page}&size=2000",
+              headers=headers,
+              json=payload
+          )
 
-      if isinstance(page_data, list):
-          items = page_data
-      elif isinstance(page_data, dict):
-          items = page_data.get("data") or page_data.get("content") or []
-      else:
-          print("Unexpected response type.")
-          break
+          if response.status_code != 200:
+              print(f"Failed to fetch page {page}. Status: {response.status_code}")
+              break
 
-      if not items:
-          print("No more data.")
-          break
+          page_data = response.json()
 
-      all_data.extend(items)
-      page += 1
+          if isinstance(page_data, list):
+              items = page_data
+          elif isinstance(page_data, dict):
+              items = page_data.get("data") or page_data.get("content") or []
+          else:
+              print("Unexpected response type.")
+              break
 
-  with open("output_data.json", "w") as f:
-      json.dump(all_data, f, indent=2)
+          if not items:
+              print("No more data.")
+              break
 
-  print(f"Saved {len(all_data)} records to output_data.json")
+          all_data.extend(items)
+          page += 1
+
+      os.makedirs(os.path.dirname(args.json_data), exist_ok=True)
+      with open(args.json_data, "w") as f:
+          json.dump(all_data, f, indent=2)
+
+      print(f"Saved {len(all_data)} records to {args.json_data}")
+
+    args:
+    - --url_base
+    - {inputValue: url_base}
+    - --payload
+    - {inputValue: payload}
+    - --auth_token
+    - {inputValue: auth_token}
+    - --json_data
+    - {outputPath: json_data}
