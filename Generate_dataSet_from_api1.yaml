@@ -1,0 +1,88 @@
+name: Fetch CPU Metric Data
+description: Fetches paginated metric data from a REST API using user-defined configuration for URL, payload, and authorization.
+
+inputs:
+- {name: url_base, type: string}
+- {name: payload, type: object}
+- {name: auth_token, type: string}
+
+outputs:
+- {name: json_data}
+
+implementation:
+  container:
+    image: python:3.9
+    command:
+    - python3
+    - -u
+    - -c
+    - |
+      import requests
+      import json
+      import argparse
+      import os
+
+      parser = argparse.ArgumentParser()
+      parser.add_argument("--url_base", type=str, required=True)
+      parser.add_argument("--payload", type=str, required=True)
+      parser.add_argument("--auth_token", type=str, required=True)
+      parser.add_argument("--json_data", type=str, required=True)
+      args = parser.parse_args()
+
+      url_base = args.url_base
+      payload = json.loads(args.payload)  # payload passed as JSON string
+      auth_token = args.auth_token
+
+      headers = {
+          "accept": "application/json",
+          "Content-Type": "application/json",
+          "Authorization": f"Bearer {auth_token}"
+      }
+
+      all_data = []
+      page = 0
+
+      while True:
+          print(f"Fetching page {page}...")
+          response = requests.post(
+              f"{url_base}?page={page}&size=2000",
+              headers=headers,
+              json=payload
+          )
+
+          if response.status_code != 200:
+              print(f"Failed to fetch page {page}. Status: {response.status_code}")
+              break
+
+          page_data = response.json()
+
+          if isinstance(page_data, list):
+              items = page_data
+          elif isinstance(page_data, dict):
+              items = page_data.get("data") or page_data.get("content") or []
+          else:
+              print("Unexpected response type.")
+              break
+
+          if not items:
+              print("No more data.")
+              break
+
+          all_data.extend(items)
+          page += 1
+
+      os.makedirs(os.path.dirname(args.json_data), exist_ok=True)
+      with open(args.json_data, "w") as f:
+          json.dump(all_data, f, indent=2)
+
+      print(f"Saved {len(all_data)} records to {args.json_data}")
+
+    args:
+    - --url_base
+    - {inputValue: url_base}
+    - --payload
+    - {inputValue: payload}
+    - --auth_token
+    - {inputValue: auth_token}
+    - --json_data
+    - {outputPath: json_data}
