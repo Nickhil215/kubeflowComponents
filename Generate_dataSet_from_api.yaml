@@ -1,0 +1,64 @@
+name: Fetch CPU Metric Data
+description: Fetches paginated metric data from a REST API using user-defined configuration for URL, payload, and authorization.
+
+inputs:
+  url_base:
+    type: string
+    description: Base URL of the API endpoint (excluding pagination params)
+  payload:
+    type: object
+    description: JSON payload to be sent in the POST request body
+  auth_token:
+    type: string
+    description: Bearer token for Authorization header
+
+script: |
+  import requests
+  import json
+
+  url_base = inputs['url_base']
+  payload = inputs['payload']
+  auth_token = inputs['auth_token']
+
+  headers = {
+      "accept": "application/json",
+      "Content-Type": "application/json",
+      "Authorization": f"Bearer {auth_token}"
+  }
+
+  all_data = []
+  page = 0
+
+  while True:
+      print(f"Fetching page {page}...")
+      response = requests.post(
+          f"{url_base}?page={page}&size=2000",
+          headers=headers,
+          json=payload
+      )
+
+      if response.status_code != 200:
+          print(f"Failed to fetch page {page}. Status: {response.status_code}")
+          break
+
+      page_data = response.json()
+
+      if isinstance(page_data, list):
+          items = page_data
+      elif isinstance(page_data, dict):
+          items = page_data.get("data") or page_data.get("content") or []
+      else:
+          print("Unexpected response type.")
+          break
+
+      if not items:
+          print("No more data.")
+          break
+
+      all_data.extend(items)
+      page += 1
+
+  with open("output_data.json", "w") as f:
+      json.dump(all_data, f, indent=2)
+
+  print(f"Saved {len(all_data)} records to output_data.json")
