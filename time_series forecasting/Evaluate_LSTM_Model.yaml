@@ -1,0 +1,107 @@
+name: Evaluate LSTM Model
+description: Evaluates a trained LSTM model across each component using RMSE, MAE, and custom accuracy.
+
+inputs:
+  - {name: json_data, type: JsonArray}
+  - {name: encoder_path, type: Path}
+  - {name: scalers_path, type: Path}
+  - {name: model_path, type: Path}
+  - {name: input_window, type: Integer}
+  - {name: forecast_horizon, type: Integer}
+
+outputs:
+  - {name: metrics_json, type: Json}
+
+implementation:
+  container:
+    image: python:3.9
+    command:
+    - sh
+    - -c
+    - |
+      PIP_DISABLE_PIP_VERSION_CHECK=1 python3 -m pip install --quiet pandas numpy scikit-learn tensorflow joblib || \
+      PIP_DISABLE_PIP_VERSION_CHECK=1 python3 -m pip install --quiet pandas numpy scikit-learn tensorflow joblib --user
+      exec "$0" "$@"
+    - python3
+    - -u
+    - -c
+    - |
+      import argparse
+      import pandas as pd
+      import numpy as np
+      import joblib
+      import json
+      from sklearn.metrics import mean_squared_error, mean_absolute_error
+      from tensorflow.keras.models import load_model
+      import os
+
+      def evaluate_model(df, encoder, model, scalers, input_window, forecast_horizon):
+          results = []
+          for comp in df['component'].unique():
+              comp_df = df[df['component'] == comp].sort_values('timestamp')
+              if len(comp_df) < input_window + forecast_horizon + 10:
+                  continue
+              comp_id = encoder.transform([comp])[0]
+              data = comp_df[['value_norm']].copy()
+              data['component_id'] = comp_id
+              values = data.values
+
+              X_eval, y_true = [], []
+              for i in range(len(values) - input_window - forecast_horizon):
+                  X_eval.append(values[i:i + input_window])
+                  y_true.append(values[i + input_window:i + input_window + forecast_horizon, 0])
+
+              X_eval, y_true = np.array(X_eval), np.array(y_true)
+              y_pred_scaled = model.predict(X_eval, verbose=0)
+              scaler = scalers[comp]
+              y_pred = scaler.inverse_transform(y_pred_scaled.reshape(-1, 1))
+              y_true = scaler.inverse_transform(y_true.reshape(-1, 1))
+
+              mse = mean_squared_error(y_true, y_pred)
+              rmse = np.sqrt(mse)
+              mae = mean_absolute_error(y_true, y_pred)
+              accuracy = 100 - (mae / np.mean(y_true)) * 100
+
+              results.append({'component': comp, 'mse': mse, 'rmse': rmse, 'mae': mae, 'accuracy (%)': accuracy})
+          return pd.DataFrame(results)
+
+      parser = argparse.ArgumentParser()
+      parser.add_argument("--json_data", type=str, required=True)
+      parser.add_argument("--encoder_path", type=str, required=True)
+      parser.add_argument("--scalers_path", type=str, required=True)
+      parser.add_argument("--model_path", type=str, required=True)
+      parser.add_argument("--input_window", type=int, required=True)
+      parser.add_argument("--forecast_horizon", type=int, required=True)
+      parser.add_argument("--metrics_json", type=str)
+      args = parser.parse_args()
+
+      # Load data and artifacts
+      with open(args.json_data, "r") as f:
+          df = pd.DataFrame(json.load(f))
+
+      encoder = joblib.load(args.encoder_path)
+      scalers = joblib.load(args.scalers_path)
+      model = load_model(args.model_path)
+
+      metrics_df = evaluate_model(df, encoder, model, scalers, args.input_window, args.forecast_horizon)
+
+      os.makedirs(os.path.dirname(args.metrics_json), exist_ok=True)
+      with open(args.metrics_json, "w") as f:
+          json.dump(metrics_df.to_dict(orient="records"), f, indent=2)
+
+      print(f"Evaluation complete. Results saved to {args.metrics_json}")
+    args:
+    - --json_data
+    - {inputPath: json_data}
+    - --encoder_path
+    - {inputPath: encoder_path}
+    - --scalers_path
+    - {inputPath: scalers_path}
+    - --model_path
+    - {inputPath: model_path}
+    - --input_window
+    - {inputValue: input_window}
+    - --forecast_horizon
+    - {inputValue: forecast_horizon}
+    - --metrics_json
+    - {outputPath: metrics_json}
