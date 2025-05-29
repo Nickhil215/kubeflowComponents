@@ -1,77 +1,84 @@
-name: Preprocess Component JSON Data
-description: Loads component metrics from a JSON file, encodes component IDs, and normalizes values per component using MinMaxScaler.
+name: Preprocess Component Data
+description: Loads component metric data from JSON, encodes components, normalizes values, and returns processed data with serialized encoder and scalers.
 
 inputs:
-- {name: json_data, type: string}
-- {name: encoder_path, type: string}
-- {name: scalers_path, type: string}
+  - {name: json_data, type: Json}
 
 outputs:
-- {name: json_data}
-- {name: encoder_path}
-- {name: scalers_path}
+  - {name: processed_json, type: JsonArray}
+  - {name: encoder_path, type: Path}
+  - {name: scalers_path, type: Path}
 
 implementation:
   container:
-    image: python:3.8
+    image: python:3.9
     command:
-      - sh
-      - -c
-      - |
-        PIP_DISABLE_PIP_VERSION_CHECK=1 python3 -m pip install --quiet pandas scikit-learn joblib || \
-        PIP_DISABLE_PIP_VERSION_CHECK=1 python3 -m pip install --quiet pandas scikit-learn joblib --user
-        exec "$0" "$@"
-      - python3
-      - -u
-      - -c
-      - |
-        import pandas as pd
-        from sklearn.preprocessing import LabelEncoder, MinMaxScaler
-        import joblib
-        import argparse
-        import os
-        import json
+    - sh
+    - -c
+    - |
+      PIP_DISABLE_PIP_VERSION_CHECK=1 python3 -m pip install --quiet pandas scikit-learn joblib || \
+      PIP_DISABLE_PIP_VERSION_CHECK=1 python3 -m pip install --quiet pandas scikit-learn joblib --user
+      exec "$0" "$@"
+    - python3
+    - -u
+    - -c
+    - |
+      import pandas as pd
+      from sklearn.preprocessing import LabelEncoder, MinMaxScaler
+      import joblib
+      import argparse
+      import json
+      import os
 
-        def preprocess(df):
-            encoder = LabelEncoder()
-            df['component_id'] = encoder.fit_transform(df['component'])
-            df['value_norm'] = 0.0
-            scalers = {}
+      def preprocess(df):
+          encoder = LabelEncoder()
+          df['component_id'] = encoder.fit_transform(df['component'])
+          df['value_norm'] = 0.0
+          scalers = {}
 
-            for component in df['component'].unique():
-                mask = df['component'] == component
-                scaler = MinMaxScaler()
-                df.loc[mask, 'value_norm'] = scaler.fit_transform(df.loc[mask][['value']])
-                scalers[component] = scaler
+          for component in df['component'].unique():
+              mask = df['component'] == component
+              scaler = MinMaxScaler()
+              df.loc[mask, 'value_norm'] = scaler.fit_transform(df.loc[mask][['value']])
+              scalers[component] = scaler
 
-            return df, encoder, scalers
+          return df, encoder, scalers
 
-        parser = argparse.ArgumentParser()
-        parser.add_argument("--json_data", type=str, required=True)
-        parser.add_argument("--encoder_path", type=str, required=True)
-        parser.add_argument("--scalers_path", type=str, required=True)
-        args = parser.parse_args()
+      parser = argparse.ArgumentParser()
+      parser.add_argument("--json_data", type=str, required=True)
+      parser.add_argument("--processed_json", type=str)
+      parser.add_argument("--encoder_path", type=str)
+      parser.add_argument("--scalers_path", type=str)
+      args = parser.parse_args()
 
-        # Load JSON data
-        with open(args.json_data, "r") as f:
-            raw_data = json.load(f)
+      # Load input data
+      with open(args.json_data, "r") as f:
+          data = json.load(f)
+      df = pd.DataFrame(data)
 
-        df = pd.DataFrame(raw_data)
-        df_out, encoder, scalers = preprocess(df)
+      # Run preprocessing
+      df_out, encoder, scalers = preprocess(df)
 
-        # Save output back to JSON
-        with open(args.json_data, "w") as f:
-            json.dump(df_out.to_dict(orient="records"), f, indent=2)
+      # Ensure directories exist
+      os.makedirs(os.path.dirname(args.processed_json), exist_ok=True)
+      os.makedirs(os.path.dirname(args.encoder_path), exist_ok=True)
+      os.makedirs(os.path.dirname(args.scalers_path), exist_ok=True)
 
-        # Save models
-        joblib.dump(encoder, args.encoder_path)
-        joblib.dump(scalers, args.scalers_path)
+      # Save processed data
+      with open(args.processed_json, "w") as f:
+          json.dump(df_out.to_dict(orient="records"), f, indent=2)
 
-        print(f"Saved normalized JSON data to {args.json_data}")
+      # Save artifacts
+      joblib.dump(encoder, args.encoder_path)
+      joblib.dump(scalers, args.scalers_path)
+
+      print(f"Preprocessing complete: {len(df_out)} records written.")
     args:
-      - --json_data
-      - {outputPath: json_data}
-      - --encoder_path
-      - {outputPath: encoder_path}
-      - --scalers_path
-      - {outputPath: scalers_path}
+    - --json_data
+    - {inputPath: json_data}
+    - --processed_json
+    - {outputPath: processed_json}
+    - --encoder_path
+    - {outputPath: encoder_path}
+    - --scalers_path
+    - {outputPath: scalers_path}
