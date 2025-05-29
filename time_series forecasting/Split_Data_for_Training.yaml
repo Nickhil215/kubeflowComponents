@@ -1,0 +1,79 @@
+name: Split Data for Training
+description: Splits input sequences and targets into training and validation sets based on the given ratio.
+
+inputs:
+  - {name: X_sequences, type: NumpyArray}
+  - {name: y_sequences, type: NumpyArray}
+  - {name: train_split_ratio, type: Float}
+
+outputs:
+  - {name: X_train, type: NumpyArray}
+  - {name: X_val, type: NumpyArray}
+  - {name: y_train, type: NumpyArray}
+  - {name: y_val, type: NumpyArray}
+
+implementation:
+  container:
+    image: python:3.9
+    command:
+    - sh
+    - -c
+    - |
+      PIP_DISABLE_PIP_VERSION_CHECK=1 python3 -m pip install --quiet numpy || \
+      PIP_DISABLE_PIP_VERSION_CHECK=1 python3 -m pip install --quiet numpy --user
+      exec "$0" "$@"
+    - python3
+    - -u
+    - -c
+    - |
+      import numpy as np
+      import argparse
+      import os
+
+      parser = argparse.ArgumentParser()
+      parser.add_argument("--X_sequences", type=str, required=True)
+      parser.add_argument("--y_sequences", type=str, required=True)
+      parser.add_argument("--train_split_ratio", type=float, required=True)
+      parser.add_argument("--X_train", type=str)
+      parser.add_argument("--X_val", type=str)
+      parser.add_argument("--y_train", type=str)
+      parser.add_argument("--y_val", type=str)
+      args = parser.parse_args()
+
+      # Load sequences
+      X = np.load(args.X_sequences)
+      y = np.load(args.y_sequences)
+
+      # Calculate split index
+      split = int(args.train_split_ratio * len(X))
+
+      # Slice arrays
+      X_train, X_val = X[:split], X[split:]
+      y_train, y_val = y[:split], y[split:]
+
+      # Ensure output directories exist
+      for path in [args.X_train, args.X_val, args.y_train, args.y_val]:
+          os.makedirs(os.path.dirname(path), exist_ok=True)
+
+      # Save the splits
+      np.save(args.X_train, X_train)
+      np.save(args.X_val, X_val)
+      np.save(args.y_train, y_train)
+      np.save(args.y_val, y_val)
+
+      print(f"Split {len(X)} samples → {len(X_train)} train / {len(X_val)} val")
+    args:
+    - --X_sequences
+    - {inputPath: X_sequences}
+    - --y_sequences
+    - {inputPath: y_sequences}
+    - --train_split_ratio
+    - {inputValue: train_split_ratio}
+    - --X_train
+    - {outputPath: X_train}
+    - --X_val
+    - {outputPath: X_val}
+    - --y_train
+    - {outputPath: y_train}
+    - --y_val
+    - {outputPath: y_val}
