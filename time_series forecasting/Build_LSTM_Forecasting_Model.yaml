@@ -1,0 +1,59 @@
+name: Build LSTM Forecasting Model
+description: Constructs and compiles an LSTM model for multistep time series forecasting based on input shape and forecast horizon.
+
+inputs:
+  - {name: input_shape, type: Tuple}
+  - {name: forecast_horizon, type: Integer}
+
+outputs:
+  - {name: model_path, type: Path}
+
+implementation:
+  container:
+    image: tensorflow/tensorflow:2.15.0
+    command:
+    - sh
+    - -c
+    - |
+      PIP_DISABLE_PIP_VERSION_CHECK=1 python3 -m pip install --quiet tensorflow || \
+      PIP_DISABLE_PIP_VERSION_CHECK=1 python3 -m pip install --quiet tensorflow --user
+      exec "$0" "$@"
+    - python3
+    - -u
+    - -c
+    - |
+      import argparse
+      import os
+      from tensorflow.keras.models import Sequential
+      from tensorflow.keras.layers import LSTM, Dense, Dropout
+
+      def build_model(input_shape, forecast_horizon):
+          model = Sequential([
+              LSTM(128, return_sequences=True, input_shape=input_shape),
+              Dropout(0.2),
+              LSTM(64),
+              Dense(forecast_horizon)
+          ])
+          model.compile(optimizer='adam', loss='mse')
+          return model
+
+      parser = argparse.ArgumentParser()
+      parser.add_argument("--input_shape", type=str, required=True)
+      parser.add_argument("--forecast_horizon", type=int, required=True)
+      parser.add_argument("--model_path", type=str)
+      args = parser.parse_args()
+
+      input_shape = tuple(map(int, args.input_shape.strip("()").split(",")))  # e.g. "(10,2)" => (10, 2)
+      model = build_model(input_shape, args.forecast_horizon)
+
+      os.makedirs(os.path.dirname(args.model_path), exist_ok=True)
+      model.save(args.model_path)
+
+      print(f"Model saved at {args.model_path}")
+    args:
+    - --input_shape
+    - {inputValue: input_shape}
+    - --forecast_horizon
+    - {inputValue: forecast_horizon}
+    - --model_path
+    - {outputPath: model_path}
