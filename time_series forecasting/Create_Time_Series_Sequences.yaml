@@ -2,7 +2,7 @@ name: Create Time Series Sequences
 description: Generates input-output sequences from normalized time series data grouped by component ID.
 
 inputs:
-  - {name: json_data, type: Json}
+  - {name: json_data, type: JsonArray}
   - {name: input_len, type: Integer}
   - {name: output_len, type: Integer}
 
