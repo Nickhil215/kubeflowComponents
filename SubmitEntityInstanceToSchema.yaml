@@ -1,0 +1,75 @@
+name: Post Entity Instance
+description: Posts structured entity instance data to a remote API using user-defined payload and authorization.
+
+inputs:
+  - {name: domine, type: string}      # Base URL like https://ig.aidtaas.com
+  - {name: schema_id, type: string}   # Schema ID to be injected in URL
+  - {name: payload, type: object}     # Full payload JSON
+  - {name: auth_token, type: string}  # Bearer token
+
+outputs:
+  - {name: json_data}
+
+implementation:
+  container:
+    image: python:3.8
+    command:
+      - sh
+      - -c
+      - |
+        PIP_DISABLE_PIP_VERSION_CHECK=1 python3 -m pip install --quiet requests || \
+        PIP_DISABLE_PIP_VERSION_CHECK=1 python3 -m pip install --quiet requests --user
+        exec "$0" "$@"
+      - python3
+      - -u
+      - -c
+      - |
+        import requests
+        import json
+        import argparse
+        import os
+
+        parser = argparse.ArgumentParser()
+        parser.add_argument("--domine", type=str, required=True)
+        parser.add_argument("--schema_id", type=str, required=True)
+        parser.add_argument("--payload", type=str, required=True)
+        parser.add_argument("--auth_token", type=str, required=True)
+        parser.add_argument("--json_data", type=str, required=True)
+        args = parser.parse_args()
+
+        # Construct full URL
+        full_url = f"{args.domine}/pi-entity-instances-service/v2.0/schemas/{args.schema_id}/instances"
+
+        headers = {
+            "accept": "application/json",
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {args.auth_token}"
+        }
+
+        payload = json.loads(args.payload)
+
+        print(f"Sending POST to {full_url}")
+        response = requests.post(full_url, headers=headers, json=payload)
+
+        print(f"Status Code: {response.status_code}")
+        if response.status_code != 200:
+            print("Error:", response.text)
+
+        response_data = response.json()
+
+        os.makedirs(os.path.dirname(args.json_data), exist_ok=True)
+        with open(args.json_data, "w") as f:
+            json.dump(response_data, f, indent=2)
+
+        print(f"Saved response to {args.json_data}")
+    args:
+      - --domine
+      - {inputValue: domine}
+      - --schema_id
+      - {inputValue: schema_id}
+      - --payload
+      - {inputValue: payload}
+      - --auth_token
+      - {inputValue: auth_token}
+      - --json_data
+      - {outputPath: json_data}
