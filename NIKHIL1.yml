@@ -1,4 +1,3 @@
-!!com.aidtaas.mobius.service.yaml_mutation.FlatYamlConfig
 description: Gets the specified number of lines from the input file.
 implementation:
   container:
