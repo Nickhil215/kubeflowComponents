@@ -1,0 +1,26 @@
+description: Gets the specified number of lines from the input file.
+implementation:
+  container:
+    command:
+    - python3
+    - ${PATH}
+    - --input1-path
+    - inputPath: Input 1
+    - --param1
+    - inputValue: Parameter 1
+    - --output1-path
+    - outputPath: Output 1
+    image: ${IMAGE_REFERENCE}
+inputs:
+- name: Input 1
+  type: Data
+  description: Data for input 1
+- name: Parameter 1
+  type: Integer
+  default: '100'
+  description: Number of lines to copy
+name: Get Lines
+outputs:
+- name: Output 1
+  type: String
+  description: Output 1 sample_data.
