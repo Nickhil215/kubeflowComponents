@@ -49,16 +49,14 @@ implementation:
     command:
     - sh
     - -c
-    - |2
-
+    - |
       PIP_DISABLE_PIP_VERSION_CHECK=1 python3 -m pip install --quiet requests || \
       PIP_DISABLE_PIP_VERSION_CHECK=1 python3 -m pip install --quiet requests --user
       exec "$0" "$@"
     - python3
     - -u
     - -c
-    - |2-
-
+    - |-
       import requests
       import json
       import argparse
@@ -79,14 +77,14 @@ implementation:
 
       url = f"{args.domine}/mobius-iam-service/v1.0/login"
       headers = {
-      "Content-Type": "application/json"
+          "Content-Type": "application/json"
       }
 
       payload = {
-      "userName": args.userName,
-      "password": args.password,
-      "productId": args.productId,
-      "requestType": args.requestType
+          "userName": args.userName,
+          "password": args.password,
+          "productId": args.productId,
+          "requestType": args.requestType
       }
 
       print(f"Sending POST to {url}")
@@ -95,12 +93,12 @@ implementation:
 
       result = response.json()
       if response.status_code != 200:
-      print("Error:", result)
+          print("Error:", result)
 
       def write_output(path, value):
-      os.makedirs(os.path.dirname(path), exist_ok=True)
-      with open(path, "w") as f:
-      f.write(str(value))
+          os.makedirs(os.path.dirname(path), exist_ok=True)
+          with open(path, "w") as f:
+              f.write(str(value))
 
       write_output(args.accessToken, result.get("accessToken", ""))
       write_output(args.expiresIn, result.get("expiresIn", ""))
