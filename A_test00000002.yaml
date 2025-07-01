@@ -2,79 +2,100 @@ name: IAM Login Service
 description: Authenticates a user and extracts accessToken, refreshToken, and related
   metadata from the IAM login response.
 inputs:
-- name: userName
+- {
+  name: userName,
   type: string
-- name: password
+}
+- {
+  name: password,
   type: string
-- name: productId
+}
+- {
+  name: productId,
   type: string
-- name: requestType
+}
+- {
+  name: requestType,
   type: string
-- name: domine
+}
+- {
+  name: domine,
   type: string
+}
 outputs:
-- name: accessToken
+- {
+  name: accessToken,
   type: string
-- name: expiresIn
+}
+- {
+  name: expiresIn,
   type: string
-- name: refreshToken
+}
+- {
+  name: refreshToken,
   type: string
-- name: tenantId
+}
+- {
+  name: tenantId,
   type: string
-- name: platformId
+}
+- {
+  name: platformId,
   type: string
+}
 implementation:
   container:
     image: python:3.8
     command:
     - sh
     - -c
-    - |
-      echo "🟡 Installing requests package..."
-      PIP_DISABLE_PIP_VERSION_CHECK=1 python3 -m pip install --quiet requests || \         PIP_DISABLE_PIP_VERSION_CHECK=1 python3 -m pip install --quiet requests --user 
-      echo "🟢 Starting IAM login Python script..."
-    - python3
-    - -u
-    - -c
-    - 'import requests         import json         import argparse         import
-      os          parser = argparse.ArgumentParser()         parser.add_argument("--userName",
-      type=str, required=True)         parser.add_argument("--password", type=str,
-      required=True)         parser.add_argument("--productId", type=str, required=True)         parser.add_argument("--requestType",
-      type=str, required=True)         parser.add_argument("--domine", type=str, required=True)         parser.add_argument("--accessToken",
-      type=str, required=True)         parser.add_argument("--expiresIn", type=str,
-      required=True)         parser.add_argument("--refreshToken", type=str, required=True)         parser.add_argument("--tenantId",
-      type=str, required=True)         parser.add_argument("--platformId", type=str,
-      required=True)         args = parser.parse_args()          url = f"{args.domine}/mobius-iam-service/v1.0/login"         headers
-      = {             "Content-Type": "application/json"         }          payload
-      = {             "userName": args.userName,             "password": args.password,             "productId":
-      args.productId,             "requestType": args.requestType         }          print(f"Sending
-      POST to {url}")         response = requests.post(url, headers=headers, json=payload)         print("Status
-      Code:", response.status_code)          result = response.json()         if response.status_code
-      != 200:             print("Error:", result)          def write_output(path,
-      value):             os.makedirs(os.path.dirname(path), exist_ok=True)             with
-      open(path, "w") as f:                 f.write(str(value))          write_output(args.accessToken,
-      result.get("accessToken", ""))         write_output(args.expiresIn, result.get("expiresIn",
-      ""))         write_output(args.refreshToken, result.get("refreshToken", ""))         write_output(args.tenantId,
-      result.get("tenantId", ""))         write_output(args.platformId, result.get("platformId",
-      ""))'
+    - |-
+      sh
+      -c
+      PIP_DISABLE_PIP_VERSION_CHECK=1 python3 -m pip install --quiet requests || \         PIP_DISABLE_PIP_VERSION_CHECK=1 python3 -m pip install --quiet requests --user         exec "$0" "$@"
+
+      python3
+      -u
+      -c
+      import requests         import json         import argparse         import os          parser = argparse.ArgumentParser()         parser.add_argument("--userName", type=str, required=True)         parser.add_argument("--password", type=str, required=True)         parser.add_argument("--productId", type=str, required=True)         parser.add_argument("--requestType", type=str, required=True)         parser.add_argument("--domine", type=str, required=True)         parser.add_argument("--accessToken", type=str, required=True)         parser.add_argument("--expiresIn", type=str, required=True)         parser.add_argument("--refreshToken", type=str, required=True)         parser.add_argument("--tenantId", type=str, required=True)         parser.add_argument("--platformId", type=str, required=True)         args = parser.parse_args()          url = f"{args.domine}/mobius-iam-service/v1.0/login"         headers = {             "Content-Type": "application/json"         }          payload = {             "userName": args.userName,             "password": args.password,             "productId": args.productId,             "requestType": args.requestType         }          print(f"Sending POST to {url}")         response = requests.post(url, headers=headers, json=payload)         print("Status Code:", response.status_code)          result = response.json()         if response.status_code != 200:             print("Error:", result)          def write_output(path, value):             os.makedirs(os.path.dirname(path), exist_ok=True)             with open(path, "w") as f:                 f.write(str(value))          write_output(args.accessToken, result.get("accessToken", ""))         write_output(args.expiresIn, result.get("expiresIn", ""))         write_output(args.refreshToken, result.get("refreshToken", ""))         write_output(args.tenantId, result.get("tenantId", ""))         write_output(args.platformId, result.get("platformId", ""))
     args:
     - --userName
-    - inputValue: userName
+    - {
+      inputValue: userName
+    }
     - --password
-    - inputValue: password
+    - {
+      inputValue: password
+    }
     - --productId
-    - inputValue: productId
+    - {
+      inputValue: productId
+    }
     - --requestType
-    - inputValue: requestType
+    - {
+      inputValue: requestType
+    }
     - --domine
-    - inputValue: domine
+    - {
+      inputValue: domine
+    }
     - --accessToken
-    - outputPath: accessToken
+    - {
+      outputPath: accessToken
+    }
     - --expiresIn
-    - outputPath: expiresIn
+    - {
+      outputPath: expiresIn
+    }
     - --refreshToken
-    - outputPath: refreshToken
+    - {
+      outputPath: refreshToken
+    }
     - --tenantId
-    - outputPath: tenantId
+    - {
+      outputPath: tenantId
+    }
     - --platformId
-    - outputPath: platformId
+    - {
+      outputPath: platformId
+    }
