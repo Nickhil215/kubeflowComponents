@@ -1,5 +1,5 @@
 name: IAM Login Service
-description: Authenticates a user and retrieves an access token from the IAM service using username, password, productId, and requestType.
+description: Authenticates a user and extracts accessToken, refreshToken, and related metadata from the IAM login response.
 
 inputs:
   - {name: userName, type: string}
@@ -9,7 +9,11 @@ inputs:
   - {name: domine, type: string}  # Base URL like https://ig.aidtaas.com
 
 outputs:
-  - {name: auth_response, type: object}  # Full response JSON including token if success
+  - {name: accessToken, type: string}
+  - {name: expiresIn, type: string}
+  - {name: refreshToken, type: string}
+  - {name: tenantId, type: string}
+  - {name: platformId, type: string}
 
 implementation:
   container:
@@ -36,7 +40,11 @@ implementation:
         parser.add_argument("--productId", type=str, required=True)
         parser.add_argument("--requestType", type=str, required=True)
         parser.add_argument("--domine", type=str, required=True)
-        parser.add_argument("--auth_response", type=str, required=True)
+        parser.add_argument("--accessToken", type=str, required=True)
+        parser.add_argument("--expiresIn", type=str, required=True)
+        parser.add_argument("--refreshToken", type=str, required=True)
+        parser.add_argument("--tenantId", type=str, required=True)
+        parser.add_argument("--platformId", type=str, required=True)
         args = parser.parse_args()
 
         url = f"{args.domine}/mobius-iam-service/v1.0/login"
@@ -44,7 +52,7 @@ implementation:
             "Content-Type": "application/json"
         }
 
-        body = {
+        payload = {
             "userName": args.userName,
             "password": args.password,
             "productId": args.productId,
@@ -52,19 +60,24 @@ implementation:
         }
 
         print(f"Sending POST to {url}")
-        response = requests.post(url, headers=headers, json=body)
-
-        print(f"Status Code: {response.status_code}")
-        if response.status_code != 200:
-            print("Error:", response.text)
+        response = requests.post(url, headers=headers, json=payload)
+        print("Status Code:", response.status_code)
 
         result = response.json()
+        if response.status_code != 200:
+            print("Error:", result)
 
-        os.makedirs(os.path.dirname(args.auth_response), exist_ok=True)
-        with open(args.auth_response, "w") as f:
-            json.dump(result, f, indent=2)
+        def write_output(path, value):
+            os.makedirs(os.path.dirname(path), exist_ok=True)
+            with open(path, "w") as f:
+                f.write(str(value))
 
-        print(f"Saved response to {args.auth_response}")
+        write_output(args.accessToken, result.get("accessToken", ""))
+        write_output(args.expiresIn, result.get("expiresIn", ""))
+        write_output(args.refreshToken, result.get("refreshToken", ""))
+        write_output(args.tenantId, result.get("tenantId", ""))
+        write_output(args.platformId, result.get("platformId", ""))
+
     args:
       - --userName
       - {inputValue: userName}
@@ -76,5 +89,13 @@ implementation:
       - {inputValue: requestType}
       - --domine
       - {inputValue: domine}
-      - --auth_response
-      - {outputPath: auth_response}
+      - --accessToken
+      - {outputPath: accessToken}
+      - --expiresIn
+      - {outputPath: expiresIn}
+      - --refreshToken
+      - {outputPath: refreshToken}
+      - --tenantId
+      - {outputPath: tenantId}
+      - --platformId
+      - {outputPath: platformId}
