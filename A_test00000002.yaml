@@ -49,9 +49,7 @@ implementation:
     command:
     - sh
     - -c
-    - |-
-      sh
-      -c
+    - |
       PIP_DISABLE_PIP_VERSION_CHECK=1 python3 -m pip install --quiet requests || \         PIP_DISABLE_PIP_VERSION_CHECK=1 python3 -m pip install --quiet requests --user         exec "$0" "$@"
       python3
       -u
