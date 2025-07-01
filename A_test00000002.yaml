@@ -1,51 +1,78 @@
-name: Evaluate Random Forest model
-description: Evaluates a trained Random Forest model and outputs predictions and accuracy.
+name: IAM Login Service
+description: Authenticates a user and extracts accessToken, refreshToken, and related
+  metadata from the IAM login response.
 inputs:
-- name: model
-  type: Model
-- name: X_test
-  type: JsonArray
-- name: y_test
-  type: JsonArray
+- name: userName
+  type: string
+- name: password
+  type: string
+- name: productId
+  type: string
+- name: requestType
+  type: string
+- name: domine
+  type: string
 outputs:
-- name: predictions
-  type: JsonArray
-- name: accuracy
-  type: Float
+- name: accessToken
+  type: string
+- name: expiresIn
+  type: string
+- name: refreshToken
+  type: string
+- name: tenantId
+  type: string
+- name: platformId
+  type: string
 implementation:
   container:
-    image: python:3.9
+    image: python:3.8
     command:
     - sh
     - -c
     - |
-      PIP_DISABLE_PIP_VERSION_CHECK=1 python3 -m pip install --quiet --no-warn-script-location pandas scikit-learn joblib || \         PIP_DISABLE_PIP_VERSION_CHECK=1 python3 -m pip install --quiet --no-warn-script-location pandas scikit-learn joblib --user         exec "$0" "$@"
+      PIP_DISABLE_PIP_VERSION_CHECK=1 python3 -m pip install --quiet requests || \         PIP_DISABLE_PIP_VERSION_CHECK=1 python3 -m pip install --quiet requests --user         exec "$0" "$@"
     - python3
     - -u
     - -c
-    - 'import argparse         import json         import os         import joblib         import
-      pandas as pd         from sklearn.metrics import accuracy_score          parser
-      = argparse.ArgumentParser()         parser.add_argument("--model", type=str,
-      required=True)         parser.add_argument("--X_test", type=str, required=True)         parser.add_argument("--y_test",
-      type=str, required=True)         parser.add_argument("--predictions", type=str,
-      required=True)         parser.add_argument("--accuracy", type=str, required=True)         args
-      = parser.parse_args()          # Load data and model         model = joblib.load(args.model)         with
-      open(args.X_test, "r") as f:             X_test = pd.DataFrame(json.load(f))         with
-      open(args.y_test, "r") as f:             y_test = json.load(f)          # Evaluate         y_pred
-      = model.predict(X_test)         accuracy = accuracy_score(y_test, y_pred)          #
-      Ensure output directory exists         os.makedirs(os.path.dirname(args.predictions),
-      exist_ok=True)         os.makedirs(os.path.dirname(args.accuracy), exist_ok=True)          #
-      Output predictions and accuracy         with open(args.predictions, "w") as
-      f:             json.dump(y_pred.tolist(), f)         with open(args.accuracy,
-      "w") as f:             f.write(str(accuracy))'
+    - 'import requests         import json         import argparse         import
+      os          parser = argparse.ArgumentParser()         parser.add_argument("--userName",
+      type=str, required=True)         parser.add_argument("--password", type=str,
+      required=True)         parser.add_argument("--productId", type=str, required=True)         parser.add_argument("--requestType",
+      type=str, required=True)         parser.add_argument("--domine", type=str, required=True)         parser.add_argument("--accessToken",
+      type=str, required=True)         parser.add_argument("--expiresIn", type=str,
+      required=True)         parser.add_argument("--refreshToken", type=str, required=True)         parser.add_argument("--tenantId",
+      type=str, required=True)         parser.add_argument("--platformId", type=str,
+      required=True)         args = parser.parse_args()          url = f"{args.domine}/mobius-iam-service/v1.0/login"         headers
+      = {             "Content-Type": "application/json"         }          payload
+      = {             "userName": args.userName,             "password": args.password,             "productId":
+      args.productId,             "requestType": args.requestType         }          print(f"Sending
+      POST to {url}")         response = requests.post(url, headers=headers, json=payload)         print("Status
+      Code:", response.status_code)          result = response.json()         if response.status_code
+      != 200:             print("Error:", result)          def write_output(path,
+      value):             os.makedirs(os.path.dirname(path), exist_ok=True)             with
+      open(path, "w") as f:                 f.write(str(value))          write_output(args.accessToken,
+      result.get("accessToken", ""))         write_output(args.expiresIn, result.get("expiresIn",
+      ""))         write_output(args.refreshToken, result.get("refreshToken", ""))         write_output(args.tenantId,
+      result.get("tenantId", ""))         write_output(args.platformId, result.get("platformId",
+      ""))'
     args:
-    - --model
-    - inputPath: model
-    - --X_test
-    - inputPath: X_test
-    - --y_test
-    - inputPath: y_test
-    - --predictions
-    - outputPath: predictions
-    - --accuracy
-    - outputPath: accuracy
+    - --userName
+    - inputValue: userName
+    - --password
+    - inputValue: password
+    - --productId
+    - inputValue: productId
+    - --requestType
+    - inputValue: requestType
+    - --domine
+    - inputValue: domine
+    - --accessToken
+    - outputPath: accessToken
+    - --expiresIn
+    - outputPath: expiresIn
+    - --refreshToken
+    - outputPath: refreshToken
+    - --tenantId
+    - outputPath: tenantId
+    - --platformId
+    - outputPath: platformId
