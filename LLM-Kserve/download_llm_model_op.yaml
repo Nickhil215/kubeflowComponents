@@ -2,14 +2,14 @@ name: Download LLM Model
 description: Downloads a HuggingFace model and tokenizer to a specified local path and optionally uploads to S3.
 
 inputs:
-  - {name: model_id, type: string}
-  - {name: hf_token, type: string}
-  - {name: upload_to_s3, type: boolean, default: false}
-  - {name: s3_bucket, type: string, optional: true}
-  - {name: s3_key, type: string, optional: true}
+  - {name: model_id, type: string, description: HuggingFace model ID}
+  - {name: hf_token, type: string, description: HuggingFace access token}
+  - {name: upload_to_s3, type: boolean, default: false, optional: true, description: Whether to upload the model to S3}
+  - {name: s3_bucket, type: string, optional: true, description: S3 bucket name}
+  - {name: s3_key, type: string, optional: true, description: S3 object key}
 
 outputs:
-  - {name: model_path, type: Path}
+  - {name: model_path, type: string, description: Path where the model is saved locally}
 
 implementation:
   container:
