@@ -10,17 +10,13 @@ outputs:
 
 implementation:
   container:
-    image: mohitverma1688/base_image:v0.1
+    image: python:3.10
     command:
       - sh
       - -c
       - |
-        PIP_DISABLE_PIP_VERSION_CHECK=1 python3 -m pip install --no-cache-dir --quiet \
-          --index-url https://pypi.org/simple \
-          transformers peft hf_xet || \
-        PIP_DISABLE_PIP_VERSION_CHECK=1 python3 -m pip install --no-cache-dir --quiet \
-          --index-url https://pypi.org/simple \
-          transformers peft hf_xet --user
+        PIP_DISABLE_PIP_VERSION_CHECK=1 python3 -m pip install --quiet transformers==4.38.2 peft==0.8.2 hf_xet || \
+        PIP_DISABLE_PIP_VERSION_CHECK=1 python3 -m pip install --quiet transformers==4.38.2 peft==0.8.2 hf_xet --user
         exec python3 -u -c "$0"
       - |
         import os
