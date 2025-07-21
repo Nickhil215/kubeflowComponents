@@ -1,0 +1,80 @@
+name: Serve LLM Model
+description: Deploys a HuggingFace model using KServe InferenceService on Kubernetes.
+
+inputs:
+  - {name: storage_uri, type: String, description: URI to the model directory}
+  - {name: metadata_name, type: String, description: InferenceService name}
+  - {name: metadata_namespace, type: String, description: Kubernetes namespace for the deployment}
+  - {name: resources_limits, type: object, description: Resource limits}
+  - {name: resources_requests, type: object, description: Resource requests}
+  - {name: service_account_name, type: String, description: Kubernetes ServiceAccount name used to access S3}
+
+implementation:
+  container:
+    image: python:3.10
+    command:
+      - sh
+      - -c
+      - |
+        PIP_DISABLE_PIP_VERSION_CHECK=1 python3 -m pip install --quiet "kserve==0.11.2" "kubernetes>=25.3.0,<31"
+        "$0" "$@"
+      - python3
+      - -u
+      - -c
+      - |
+        import argparse
+        from kserve import KServeClient
+        from kserve import V1beta1InferenceService, V1beta1InferenceServiceSpec
+        from kserve import V1beta1PredictorSpec, V1beta1ModelSpec, V1beta1ModelFormat
+        from kubernetes.client import V1ResourceRequirements, V1ObjectMeta
+
+        parser = argparse.ArgumentParser()
+        parser.add_argument("--storage_uri", type=str, required=True)
+        parser.add_argument("--metadata_name", type=str, required=True)
+        parser.add_argument("--metadata_namespace", type=str, required=True)
+        parser.add_argument("--resources_limits", type=eval, required=True)
+        parser.add_argument("--resources_requests", type=eval, required=True)
+        parser.add_argument("--service_account_name", type=str, required=True)
+        args = parser.parse_args()
+
+        client = KServeClient()
+
+        isvc = V1beta1InferenceService(
+            api_version="serving.kserve.io/v1beta1",
+            kind="InferenceService",
+            metadata=V1ObjectMeta(
+                name=args.metadata_name,
+                namespace=args.metadata_namespace
+            ),
+            spec=V1beta1InferenceServiceSpec(
+                predictor=V1beta1PredictorSpec(
+                    service_account_name=args.service_account_name,  # ✅ HERE
+                    model=V1beta1ModelSpec(
+                        model_format=V1beta1ModelFormat(name="huggingface"),
+                        image="docker.io/kserve/huggingfaceserver:latest",
+                        image_pull_policy="Never",
+                        storage_uri=args.storage_uri,
+                        resources=V1ResourceRequirements(
+                            limits=args.resources_limits,
+                            requests=args.resources_requests
+                        )
+                    )
+                )
+            )
+        )
+
+        client.create(isvc)
+        print(f"InferenceService {args.metadata_name} created.")
+    args:
+      - --storage_uri
+      - {inputValue: storage_uri}
+      - --metadata_name
+      - {inputValue: metadata_name}
+      - --metadata_namespace
+      - {inputValue: metadata_namespace}
+      - --resources_limits
+      - {inputValue: resources_limits}
+      - --resources_requests
+      - {inputValue: resources_requests}
+      - --service_account_name
+      - {inputValue: service_account_name}
