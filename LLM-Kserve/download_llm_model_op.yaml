@@ -15,9 +15,14 @@ implementation:
       - sh
       - -c
       - |
-        PIP_DISABLE_PIP_VERSION_CHECK=1 python3 -m pip install --quiet transformers==4.38.2 peft==0.8.2 hf_xet || \
-        PIP_DISABLE_PIP_VERSION_CHECK=1 python3 -m pip install --quiet transformers==4.38.2 peft==0.8.2 hf_xet --user
-        exec python3 -u -c "$0"
+        PIP_DISABLE_PIP_VERSION_CHECK=1 python3 -m pip install --quiet
+        transformers==4.38.2 peft==0.8.2 hf_xet
+        || PIP_DISABLE_PIP_VERSION_CHECK=1 python3 -m pip install --quiet
+        transformers==4.38.2 peft==0.8.2 hf_xet --user;
+        "$0" "$@"
+      - python3
+      - -u
+      - -c
       - |
         import os
         import argparse
