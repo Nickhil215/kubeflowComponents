@@ -1,4 +1,4 @@
-name: Serve LLM Model
+name: Serve LLM Model SA
 description: Deploys a HuggingFace model using KServe InferenceService on Kubernetes.
 
 inputs:
