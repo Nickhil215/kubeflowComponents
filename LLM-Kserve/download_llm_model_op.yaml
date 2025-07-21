@@ -2,11 +2,11 @@ name: Download LLM Model
 description: Downloads a HuggingFace model and tokenizer to a specified local path.
 
 inputs:
-  - {name: model_id, type: string, description: HuggingFace model ID}
-  - {name: hf_token, type: string, description: HuggingFace access token}
+  - {name: model_id, type: String, description: HuggingFace model ID}
+  - {name: hf_token, type: String, description: HuggingFace access token}
 
 outputs:
-  - {name: model_path, type: string, description: Path where the model is saved locally}
+  - {name: model_path, type: String, description: Path where the model is saved locally}
 
 implementation:
   container:
