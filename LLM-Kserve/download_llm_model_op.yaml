@@ -15,10 +15,7 @@ implementation:
       - sh
       - -c
       - |
-        PIP_DISABLE_PIP_VERSION_CHECK=1 python3 -m pip install --quiet
-        transformers==4.38.2 peft==0.8.2 hf_xet
-        || PIP_DISABLE_PIP_VERSION_CHECK=1 python3 -m pip install --quiet
-        transformers==4.38.2 peft==0.8.2 hf_xet --user;
+        PIP_DISABLE_PIP_VERSION_CHECK=1 python3 -m pip install --quiet transformers==4.38.2 peft==0.8.2 hf_xet
         "$0" "$@"
       - python3
       - -u
