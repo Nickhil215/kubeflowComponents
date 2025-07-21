@@ -1,12 +1,9 @@
 name: Download LLM Model
-description: Downloads a HuggingFace model and tokenizer to a specified local path and optionally uploads to S3.
+description: Downloads a HuggingFace model and tokenizer to a specified local path.
 
 inputs:
   - {name: model_id, type: string, description: HuggingFace model ID}
   - {name: hf_token, type: string, description: HuggingFace access token}
-  - {name: upload_to_s3, type: string, description: Whether to upload the model to S3}
-  - {name: s3_bucket, type: string, description: S3 bucket name}
-  - {name: s3_key, type: string, description: S3 object key}
 
 outputs:
   - {name: model_path, type: string, description: Path where the model is saved locally}
@@ -15,61 +12,48 @@ implementation:
   container:
     image: mohitverma1688/base_image:v0.1
     command:
-    - sh
-    - -c
-    - |
-      PIP_DISABLE_PIP_VERSION_CHECK=1 python3 -m pip install --quiet transformers==4.38.2 peft==0.8.2 hf_xet || \
-      PIP_DISABLE_PIP_VERSION_CHECK=1 python3 -m pip install --quiet transformers==4.38.2 peft==0.8.2 hf_xet --user
-      exec python3 -u -c "$0"
-    - |
-      import os
-      import sys
-      import tarfile
-      import argparse
-      import boto3
-      from transformers import AutoTokenizer, AutoModelForCausalLM
+      - sh
+      - -c
+      - |
+        PIP_DISABLE_PIP_VERSION_CHECK=1 python3 -m pip install --quiet transformers==4.38.2 peft==0.8.2 hf_xet || \
+        PIP_DISABLE_PIP_VERSION_CHECK=1 python3 -m pip install --quiet transformers==4.38.2 peft==0.8.2 hf_xet --user
+        exec python3 -u -c "$0"
+      - |
+        import os
+        import argparse
+        from transformers import AutoTokenizer, AutoModelForCausalLM
 
-      parser = argparse.ArgumentParser()
-      parser.add_argument("--model_id", type=str, required=True)
-      parser.add_argument("--hf_token", type=str, required=True)
-      parser.add_argument("--upload_to_s3", type=bool, default=False)
-      parser.add_argument("--s3_bucket", type=str, default=None)
-      parser.add_argument("--s3_key", type=str, default=None)
-      parser.add_argument("--model_path", type=str, required=True)
-      args = parser.parse_args()
+        def _make_parent_dirs_and_return_path(file_path: str):
+            os.makedirs(os.path.dirname(file_path), exist_ok=True)
+            return file_path
 
-      os.makedirs(args.model_path, exist_ok=True)
+        def download_llm_model(model_id, hf_token, model_path):
+            print(f"Downloading model from HF: {model_id}")
+            model = AutoModelForCausalLM.from_pretrained(model_id, token=hf_token)
+            tokenizer = AutoTokenizer.from_pretrained(model_id, token=hf_token)
 
-      print(f"Downloading model from HF: {args.model_id}")
-      model = AutoModelForCausalLM.from_pretrained(args.model_id, token=args.hf_token)
-      tokenizer = AutoTokenizer.from_pretrained(args.model_id, token=args.hf_token)
+            print(f"Saving model to {model_path}")
+            model.save_pretrained(model_path)
+            tokenizer.save_pretrained(model_path)
 
-      print(f"Saving model to {args.model_path}")
-      model.save_pretrained(args.model_path)
-      tokenizer.save_pretrained(args.model_path)
+            return model_path
 
-      if args.upload_to_s3 and args.s3_bucket and args.s3_key:
-          print("Uploading to S3...")
-          tar_path = "/tmp/model.tar.gz"
-          with tarfile.open(tar_path, "w:gz") as tar:
-              tar.add(args.model_path, arcname=os.path.basename(args.model_path))
-          s3 = boto3.client("s3")
-          s3.upload_file(tar_path, args.s3_bucket, args.s3_key)
-          print(f"Uploaded to s3://{args.s3_bucket}/{args.s3_key}")
-      else:
-          print("Skipping S3 upload as per configuration.")
-          print(f"Model saved locally at {args.model_path}")
-          print(f"Model path: {args.model_path}")
+        import argparse
+        _parser = argparse.ArgumentParser()
+        _parser.add_argument("--model_id", type=str, required=True)
+        _parser.add_argument("--hf_token", type=str, required=True)
+        _parser.add_argument("--model_path", type=_make_parent_dirs_and_return_path, required=True)
+        _parsed_args = vars(_parser.parse_args())
+
+        _result = download_llm_model(**_parsed_args)
+
+        # Write output to file
+        with open(_parsed_args["model_path"] + ".txt", "w") as f:
+            f.write(str(_result))
     args:
-    - --model_id
-    - {inputValue: model_id}
-    - --hf_token
-    - {inputValue: hf_token}
-    - --upload_to_s3
-    - {inputValue: upload_to_s3}
-    - --s3_bucket
-    - {inputValue: s3_bucket}
-    - --s3_key
-    - {inputValue: s3_key}
-    - --model_path
-    - {outputPath: model_path}
+      - --model_id
+      - {inputValue: model_id}
+      - --hf_token
+      - {inputValue: hf_token}
+      - --model_path
+      - {outputPath: model_path}
