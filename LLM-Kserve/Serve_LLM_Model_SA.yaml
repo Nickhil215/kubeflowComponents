@@ -52,7 +52,7 @@ implementation:
                     model=V1beta1ModelSpec(
                         model_format=V1beta1ModelFormat(name="huggingface"),
                         image="docker.io/kserve/huggingfaceserver:latest",
-                        image_pull_policy="Never",
+                        image_pull_policy="IfNotPresent",
                         storage_uri=args.storage_uri,
                         resources=V1ResourceRequirements(
                             limits=args.resources_limits,
