@@ -18,12 +18,9 @@ implementation:
       - sh
       - -c
       - |
-        PIP_DISABLE_PIP_VERSION_CHECK=1 python3 -m pip install --quiet requests || \
-        PIP_DISABLE_PIP_VERSION_CHECK=1 python3 -m pip install --quiet requests --user
-        exec "$0" "$@"
-      - python3
-      - -u
-      - -c
+        PIP_DISABLE_PIP_VERSION_CHECK=1 python3 -m pip install --quiet transformers==4.38.2 peft==0.8.2 hf_xet || \
+        PIP_DISABLE_PIP_VERSION_CHECK=1 python3 -m pip install --quiet transformers==4.38.2 peft==0.8.2 hf_xet --user
+        exec python3 -u -c "$0"
       - |
         import os
         import sys
@@ -60,7 +57,9 @@ implementation:
             s3.upload_file(tar_path, args.s3_bucket, args.s3_key)
             print(f"Uploaded to s3://{args.s3_bucket}/{args.s3_key}")
         else:
-            print("S3 upload skipped.")
+            print("Skipping S3 upload as per configuration.")
+            print(f"Model saved locally at {args.model_path}")
+            print(f"Model path: {args.model_path}")
     args:
       - --model_id
       - {inputValue: model_id}
