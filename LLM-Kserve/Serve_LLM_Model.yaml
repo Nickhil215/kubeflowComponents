@@ -2,20 +2,24 @@ name: Serve LLM Model
 description: Deploys a HuggingFace model using KServe InferenceService on Kubernetes.
 
 inputs:
-  - {name: storage_uri, type: String, description: URI to the model directory  }
-  - {name: metadata_name, type: String, description: InferenceService name }
-  - {name: metadata_namespace, type: String, description: Kubernetes namespace for the deployment}
-  - {name: resources_limits, type: object, description: Resource limits }
-  - {name: resources_requests, type: object, description: Resource requests }
+  - {name: storage_uri, type: string, description: URI to the model directory}
+  - {name: metadata_name, type: string, description: InferenceService name}
+  - {name: metadata_namespace, type: string, description: Kubernetes namespace for the deployment}
+  - {name: resources_limits, type: object, description: Resource limits}
+  - {name: resources_requests, type: object, description: Resource requests}
 
 implementation:
   container:
     image: python:3.10
     command:
       - sh
-      - -ec
+      - -c
       - |
-        python3 -u "$0" "$@"
+        PIP_DISABLE_PIP_VERSION_CHECK=1 python3 -m pip install --quiet "kserve==0.11.2" "kubernetes>=25.3.0,<31"
+        "$0" "$@"
+      - python3
+      - -u
+      - -c
       - |
         import argparse
         from kserve import KServeClient
