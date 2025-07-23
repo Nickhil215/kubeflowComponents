@@ -51,7 +51,7 @@ implementation:
                     service_account_name=args.service_account_name,  # ✅ HERE
                     model=V1beta1ModelSpec(
                         model_format=V1beta1ModelFormat(name="huggingface"),
-                        image="docker.io/kserve/huggingfaceserver:latest",
+                        image="docker.io/kserve/huggingfaceserver:v0.15.2",
                         image_pull_policy="IfNotPresent",
                         storage_uri=args.storage_uri,
                         resources=V1ResourceRequirements(
