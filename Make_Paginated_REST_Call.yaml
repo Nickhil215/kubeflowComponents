@@ -1,0 +1,146 @@
+name: Make Paginated REST Call
+description: A Kubeflow component that makes a paginated REST API POST request with customizable payload. The Bearer token for authentication is optional.
+
+inputs:
+- {name: schemaId, type: String, description: "The Schema ID to be used in the API request."}
+- {name: domine, type: String, description: "The domain of the API endpoint (e.g., ig.gov-cloud.ai)."}
+- {name: size, type: Integer, description: "The number of entities per page.", default: 2000}
+- {name: auth_token, type: String, description: "The Bearer token for authentication.", optional: true}
+- {name: dbType, type: String, description: "Database type.", default: "TIDB"}
+- {name: entityId, type: String, description: "Single entity ID.", default: ""}
+- {name: entityIds, type: JsonObject, description: "List of entity IDs.", default: "[]"}
+- {name: ownedOnly, type: Boolean, description: "Whether to fetch only owned entities.", default: false}
+- {name: projections, type: JsonObject, description: "List of projections.", default: "[]"}
+- {name: filter, type: JsonObject, description: "Filter conditions.", default: "{}"}
+- {name: startTime, type: Integer, description: "Start time in epoch ms.", default: 0}
+- {name: endTime, type: Integer, description: "End time in epoch ms.", default: 0}
+
+outputs:
+- {name: response_data, type: JsonObject, description: "The combined list of entities from all pages."}
+  
+implementation:
+  container:
+    image: python:3.9
+    command:
+    - sh
+    - -c
+    - (PIP_DISABLE_PIP_VERSION_CHECK=1 python3 -m pip install --quiet --no-warn-script-location
+      'requests==2.32.3' || PIP_DISABLE_PIP_VERSION_CHECK=1 python3 -m
+      pip install --quiet --no-warn-script-location 'requests==2.32.3' 
+      --user) && "$0" "$@"
+    - python3
+    - -u
+    - -c
+    - |
+      import requests
+      import json
+      import argparse
+
+      def make_paginated_rest_call(schemaId, domine, size=2000, auth_token=None,
+                                   dbType="TIDB", entityId="", entityIds="[]",
+                                   ownedOnly=False, projections="[]", filter="{}",
+                                   startTime=0, endTime=0):
+
+          headers = {"Content-Type": "application/json"}
+          if auth_token:
+              headers["Authorization"] = f"Bearer {auth_token}"
+
+          # Parse JSON string inputs to dict/list
+          entityIds = json.loads(entityIds) if isinstance(entityIds, str) else entityIds
+          projections = json.loads(projections) if isinstance(projections, str) else projections
+          filter = json.loads(filter) if isinstance(filter, str) else filter
+
+          payload = {
+              "dbType": dbType,
+              "entityId": entityId,
+              "entityIds": entityIds,
+              "ownedOnly": ownedOnly,
+              "projections": projections,
+              "filter": filter,
+              "startTime": startTime,
+              "endTime": endTime
+          }
+
+          data = []
+          page = 0
+          while True:
+              url = f"https://{domine}/pi-entity-instances-service/v2.0/schemas/{schemaId}/instances/list?page={page}&size={size}&showDBaaSReservedKeywords=true"
+              response = requests.post(url, headers=headers, json=payload)
+
+              try:
+                  response_body = response.json()
+                  if not response_body:
+                      break
+                  if 'entities' in response_body:
+                      entities = response_body['entities']
+                      data.extend(entities)
+                      if len(entities) < size:
+                          break
+                  else:
+                      break
+              except ValueError:
+                  break
+              page += 1
+
+          return data
+
+      def _serialize_json(obj) -> str:
+          return json.dumps(obj, sort_keys=True)
+
+      _parser = argparse.ArgumentParser(prog='Make Paginated REST Call', description='A Kubeflow component that makes a paginated REST API POST request with customizable payload.')
+      _parser.add_argument("--schemaId", type=str, required=True)
+      _parser.add_argument("--domine", type=str, required=True)
+      _parser.add_argument("--size", type=int, default=2000)
+      _parser.add_argument("--auth_token", type=str, required=False)
+      _parser.add_argument("--dbType", type=str, default="TIDB")
+      _parser.add_argument("--entityId", type=str, default="")
+      _parser.add_argument("--entityIds", type=str, default="[]")
+      _parser.add_argument("--ownedOnly", type=lambda x: x.lower() == "true", default=False)
+      _parser.add_argument("--projections", type=str, default="[]")
+      _parser.add_argument("--filter", type=str, default="{}")
+      _parser.add_argument("--startTime", type=int, default=0)
+      _parser.add_argument("--endTime", type=int, default=0)
+      _parser.add_argument("----output-paths", dest="_output_paths", type=str, nargs=1)
+
+      _parsed_args = vars(_parser.parse_args())
+      _output_files = _parsed_args.pop("_output_paths", [])
+
+      _outputs = make_paginated_rest_call(**_parsed_args)
+
+      _output_serializers = [_serialize_json]
+
+      import os
+      for idx, output_file in enumerate(_output_files):
+          try:
+              os.makedirs(os.path.dirname(output_file))
+          except OSError:
+              pass
+          with open(output_file, 'w') as f:
+              f.write(_output_serializers[idx](_outputs))
+    args:
+    - --schemaId
+    - { inputValue: schemaId }
+    - --domine
+    - { inputValue: domine }
+    - --size
+    - { inputValue: size }
+    - --auth_token
+    - { inputValue: auth_token }
+    - --dbType
+    - { inputValue: dbType }
+    - --entityId
+    - { inputValue: entityId }
+    - --entityIds
+    - { inputValue: entityIds }
+    - --ownedOnly
+    - { inputValue: ownedOnly }
+    - --projections
+    - { inputValue: projections }
+    - --filter
+    - { inputValue: filter }
+    - --startTime
+    - { inputValue: startTime }
+    - --endTime
+    - { inputValue: endTime }
+    - ----output-paths
+    - { outputPath: response_data }
