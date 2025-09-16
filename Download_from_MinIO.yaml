@@ -1,0 +1,49 @@
+name: Download from MinIO
+description: Download all files from a specified MinIO bucket/application path to a local directory
+inputs:
+{name: MinIO bucket name, type: String}   # MinIO bucket name
+{name: Application name, type: String}    # Application name/path in MinIO
+{name: Destination path, type: String}    # Local directory to save files
+outputs:
+{name: Local path, type: String}          # Path where files were downloaded
+metadata:
+  annotations:
+    author: Nikhil <nikhil.v@mobiusdtaas.ai>
+implementation:
+    container:
+        image: ubuntu:22.04
+        command:
+        - sh
+        - -ex
+        - -c
+        - |
+            # Update the package list using IPv4
+            apt-get -o Acquire::ForceIPv4=true update
+
+            # Install wget using IPv4
+            apt-get -o Acquire::ForceIPv4=true install -y wget
+
+            # Download the MinIO client (mc)
+            wget https://dl.min.io/client/mc/release/linux-amd64/mc
+
+            # Make mc executable
+            chmod +x mc
+
+            # Move mc to /usr/local/bin so it's available in PATH
+            mv mc /usr/local/bin/
+
+            # Set up MinIO alias
+            mc alias set myminio http://minio-service.kubeflow.svc.cluster.local:9000 minio QL2YJ8G5PCE13KVW19JBLUSQDHRJZF
+
+            # Create the local destination directory
+            mkdir -p "$3"
+
+            # Download all files recursively from the specified MinIO path
+            mc cp --recursive "myminio/$1/$2/" "$3/"
+
+            # Write the destination path to the outputPath so Kubeflow can read it
+            echo "$3" > "$4"
+        - inputValue: MinIO bucket name
+        - inputValue: Application name
+        - inputPath: Destination path
+        - outputPath: Local path
