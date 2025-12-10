@@ -48,6 +48,7 @@ implementation:
         logs = []
         for i in range(100):
             resp = requests.post(url, headers=headers, json=payload)
+            print(resp.json())
             logs.append(f"Run {i+1}: {resp.status_code} | {resp.text}")
 
         def write_output(path, value):
