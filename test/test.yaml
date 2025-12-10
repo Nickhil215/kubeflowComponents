@@ -1,0 +1,92 @@
+name: Trigger ML Pipeline
+description: Triggers an ML pipeline execution via bob-service-test endpoint using POST request and returns the raw response payload.
+
+inputs:
+  - {name: pipelineId, type: string}
+  - {name: experimentId, type: string}
+  - {name: accessToken, type: string}   # Bearer token (from IAM Login Service)
+  - {name: enableCaching, type: boolean}
+  - {name: version, type: number}
+  - {name: baseUrl, type: string}       # Example: https://ig.gov-cloud.ai
+
+outputs:
+  - {name: responseBody, type: string}
+
+implementation:
+  container:
+    image: python:3.8
+    command:
+      - sh
+      - -c
+      - |
+        PIP_DISABLE_PIP_VERSION_CHECK=1 python3 -m pip install --quiet requests || \
+        PIP_DISABLE_PIP_VERSION_CHECK=1 python3 -m pip install --quiet requests --user
+        exec "$0" "$@"
+      - python3
+      - -u
+      - -c
+      - |
+        import requests
+        import json
+        import argparse
+        import os
+
+        parser = argparse.ArgumentParser()
+        parser.add_argument("--pipelineId", type=str, required=True)
+        parser.add_argument("--experimentId", type=str, required=True)
+        parser.add_argument("--accessToken", type=str, required=True)
+        parser.add_argument("--enableCaching", type=str, required=True)
+        parser.add_argument("--version", type=str, required=True)
+        parser.add_argument("--baseUrl", type=str, required=True)
+        parser.add_argument("--responseBody", type=str, required=True)
+
+        args = parser.parse_args()
+
+        url = f"{args.baseUrl}/bob-service-test/v1.0/pipeline/trigger/ml?pipelineId={args.pipelineId}"
+
+        payload = {
+            "pipelineType": "ML",
+            "containerResources": {},
+            "experimentId": args.experimentId,
+            "enableCaching": args.enableCaching.lower() == "true",
+            "parameters": {},
+            "version": int(args.version)
+        }
+
+        headers = {
+            "accept": "application/json",
+            "Authorization": f"Bearer {args.accessToken}",
+            "Content-Type": "application/json"
+        }
+
+        print(f"POST {url}")
+        response = requests.post(url, headers=headers, json=payload)
+        print("Status Code:", response.status_code)
+
+        try:
+            resp_text = response.text
+        except Exception:
+            resp_text = ""
+
+        def write_output(path, value):
+            os.makedirs(os.path.dirname(path), exist_ok=True)
+            with open(path, "w") as f:
+                f.write(str(value))
+
+        write_output(args.responseBody, resp_text)
+
+    args:
+      - --pipelineId
+      - {inputValue: pipelineId}
+      - --experimentId
+      - {inputValue: experimentId}
+      - --accessToken
+      - {inputValue: accessToken}
+      - --enableCaching
+      - {inputValue: enableCaching}
+      - --version
+      - {inputValue: version}
+      - --baseUrl
+      - {inputValue: baseUrl}
+      - --responseBody
+      - {outputPath: responseBody}
