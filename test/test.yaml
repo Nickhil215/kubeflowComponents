@@ -41,7 +41,8 @@ implementation:
 
         for i in range(100):
             response = requests.request("POST", url, headers=headers, data=payload)
-            print(response.json())
+            print(f"Request {i+1}")
+            print("Status:", response.status_code)
             
         def write_output(path, value):
             os.makedirs(os.path.dirname(path), exist_ok=True)
